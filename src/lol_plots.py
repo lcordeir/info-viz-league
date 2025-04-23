@@ -4,9 +4,11 @@ import plotly as plt
 import plotly.express as px
 import plotly.graph_objs as go
 from typing import Optional, List
+from os import path as pt
 
-from utils import format_time
+from utils import format_time, encode_image_to_base64
 
+MAPICONS_PATH = pt.join("ressources","mapicons")
 
 def add_map_bg(fig: go.Figure) -> go.Figure:
     fig.update_traces(opacity=0.66)
@@ -76,16 +78,33 @@ def get_kill_heatmap(df: pd.DataFrame, heatmap_binsize: int):
 
 def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
     time_monst=monsters.loc[monsters.groupby(['match_id','Type'])['Time'].idxmin()].groupby(['Subtype']).aggregate({'Time':'mean'}).sort_values('Time').reset_index()
-    time_monst_cols = {'FIRE':'red','WATER':'blue','AIR':'yellow','EARTH':'green'}  
+    time_monst_cols = {'INFERNAL':'red','OCEAN':'blue','CLOUD':'yellow','MOUNTAIN':'green'} 
     fig=px.bar(time_monst,
             x="Subtype",
             y="Time",
             color="Subtype",
+            width=500,
             color_discrete_map=time_monst_cols)
     # Rename y-axis
-    fig.update_layout(
-        yaxis_title='Time',
-        legend_title_text='Avg. time for first Dragon by Subtype')
+    fig.update_traces(width=0.85)\
+        .update_xaxes(showticklabels=False)\
+        .update_layout(showlegend=False,
+                       yaxis_title='Average time for first clear',)
+    # Add icons to graph
+    for elem in time_monst['Subtype']:
+        fig.add_layout_image(
+            # Could do encorde for all in advance and cache
+            source=encode_image_to_base64(f"{pt.join(MAPICONS_PATH,elem)}.png"),
+            x=elem,
+            y=0.05,  # Right at x-axis
+            xref="x",
+            yref="paper",
+            sizex=0.5,
+            sizey=0.1,
+            xanchor="center",
+            yanchor="top",
+            layer="above"
+        )
     return fig
 
 

@@ -44,6 +44,8 @@ kills.loc[:,'y_pos'] = pd.to_numeric(kills.loc[:,'y_pos'],errors='coerce') # Con
 monsters = monsters.dropna()
 monsters['Subtype'] = monsters.loc[:,'Type'].apply(lambda x: x.split('_')[0] if 'DRAGON' in x and '_' in x else None)
 monsters['Type'] = monsters.loc[:,'Type'].apply(lambda x: 'DRAGON' if 'DRAGON' in x else x)
+drake_rename = {'FIRE':'INFERNAL','EARTH':'MOUNTAIN','WATER':'OCEAN','AIR':'CLOUD'}
+monsters['Subtype'] = monsters['Subtype'].apply(lambda x: drake_rename[x] if x in drake_rename.keys() else x)
 
 
 # Structures
