@@ -169,6 +169,18 @@ wheels = [
 ]
 
 [[package]]
+name = "dash-ag-grid"
+version = "31.3.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "dash" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/74/5e/e8c0b160005c5b01407aa4c739bf28a60043921458b2f25ef7b977f989e9/dash_ag_grid-31.3.1.tar.gz", hash = "sha256:90069c340d893841d4e405fd3759794260946428c9cefcf70a356431e68c5020", size = 3861593 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/84/a9/7d1bd060ca28611e155cf7e3a53756b7244ee3224481c9ff0be0d2d2b2fb/dash_ag_grid-31.3.1-py3-none-any.whl", hash = "sha256:2bce8e2a99c2d08800f6c119e4723c838789a093eea29b121aabdb541e1da156", size = 3878810 },
+]
+
+[[package]]
 name = "debugpy"
 version = "1.8.13"
 source = { registry = "https://pypi.org/simple" }
@@ -255,6 +267,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "dash" },
+    { name = "dash-ag-grid" },
     { name = "nbformat" },
     { name = "pandas" },
 ]
@@ -267,6 +280,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dash", specifier = ">=3.0.1" },
+    { name = "dash-ag-grid", specifier = ">=31.3.1" },
     { name = "nbformat", specifier = ">=5.10.4" },
     { name = "pandas", specifier = ">=2.2.3" },
 ]
