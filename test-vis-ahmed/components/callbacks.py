@@ -2,7 +2,7 @@
 from dash import Input, Output, callback, html
 from components.kills_tab import kills_tab_layout
 from components.utils import load_data, filter_data
-from components.plots import generate_kill_map, generate_kill_timeline
+from components.plots import generate_kill_map, generate_kill_timeline, generate_podium
 import json
 import os
 import pandas as pd
@@ -38,7 +38,10 @@ def filter_data(df, kill_time_range, team_filter):
 @callback(
     [Output("map-graph", "figure"),
      Output("kill-list", "children"),
-     Output("timeline-fig", "figure")],
+     Output("timeline-fig", "figure"),
+     Output("kill-podium", "figure"),
+     Output("assist-podium", "figure")
+     ],
     [Input("time-slider", "value"),
      Input("team-filter", "value"),
      Input("map-style", "value")]
@@ -54,6 +57,7 @@ def update_map(kill_time_range, team_filter, map_style):
     # Generate the kill map with the selected style
     map_fig = generate_kill_map(filtered_kills, map_style, team_filter)
     timeline_fig = generate_kill_timeline(filtered_kills)
+    fig_kills, fig_assists = generate_podium(filtered_kills)
     
     # Generate a list of kills as cards
     kill_list = [
@@ -73,4 +77,4 @@ def update_map(kill_time_range, team_filter, map_style):
         for _, row in filtered_kills.iterrows()
     ]
 
-    return map_fig, kill_list, timeline_fig
+    return map_fig, kill_list, timeline_fig, fig_kills, fig_assists

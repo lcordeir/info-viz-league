@@ -156,3 +156,129 @@ def generate_kill_timeline(kills_df):
     )
 
     return fig
+
+# def generate_podium(kills_df):
+#     # Count kills and assists
+#     top_kills = kills_df["Killer"].value_counts().nlargest(3)
+#     assist_cols = [col for col in kills_df.columns if col.startswith("Assist_")]
+#     top_assists = kills_df[assist_cols].stack().value_counts().nlargest(3)
+
+#     def podium_figure(series, title):
+#         # Sort to place 2nd left, 1st center, 3rd right
+#         podium_order = [1, 0, 2]
+#         names = series.index[podium_order]
+#         counts = series.values[podium_order]
+
+#         colors = ["silver", "gold", "#cd7f32"]  # silver, gold, bronze
+#         labels = ["#2", "#1", "#3"]
+#         heights = [13, 20, 8]
+#         widths = 3 * [1]
+#         # heights = [counts[0], counts[1], counts[2]]
+
+#         fig = go.Figure()
+#         fig.add_trace(go.Bar(
+#             x=labels,
+#             y=heights,
+#             text=names,
+#             textfont=dict(size=20),
+#             textposition="inside",
+#             marker_color=colors,
+#             width=widths
+#             # width=[0.4, 0.4, 0.4]
+#         ))
+
+#         fig.update_layout(
+#             title=title,
+#             # yaxis_title="Count",
+#             xaxis=dict(
+#                 showticklabels=True,
+#                 tickfont=dict(size=32)  # ⬅️ Increase label font size
+#             ),
+#             yaxis=dict(showticklabels=False),
+#             # xaxis=dict(showticklabels=True),
+#             showlegend=False,
+#             bargap=0.5,
+#             plot_bgcolor="white",
+#             hovermode=False,
+#             dragmode=False
+#         )
+
+#         return fig
+
+#     return (
+#         podium_figure(top_kills, "Top 3 Killers"),
+#         podium_figure(top_assists, "Top 3 Assisters")
+#     )
+def generate_podium(kills_df):
+    # Count kills and assists
+    top_kills = kills_df["Killer"].value_counts().nlargest(3)
+    assist_cols = [col for col in kills_df.columns if col.startswith("Assist_")]
+    top_assists = kills_df[assist_cols].stack().value_counts().nlargest(3)
+
+    def podium_figure(series, title):
+        n = len(series)
+        if n == 0:
+            fig = go.Figure()
+            fig.update_layout(
+                title=title,
+                xaxis=dict(showticklabels=False),
+                yaxis=dict(showticklabels=False),
+                showlegend=False,
+                plot_bgcolor="white",
+                hovermode=False,
+                dragmode=False,
+                annotations=[
+                    dict(
+                        text="Not enough data",
+                        x=0.5, y=0.5,
+                        xref="paper", yref="paper",
+                        showarrow=False,
+                        font=dict(size=24)
+                    )
+                ]
+            )
+            return fig
+
+        podium_order = [1, 0, 2][:n] if n == 3 else list(range(n))
+        names = series.index[podium_order]
+        counts = series.values[podium_order]
+
+        base_colors = ["silver", "gold", "#cd7f32"]
+        base_labels = ["#2", "#1", "#3"]
+        colors = [base_colors[i] for i in podium_order]
+        labels = [base_labels[i] for i in podium_order]
+        heights = [13, 20, 8][:n]
+        widths = [1] * n
+
+        fig = go.Figure()
+        fig.add_trace(go.Bar(
+            x=labels,
+            y=heights,
+            text=names,
+            textfont=dict(size=20),
+            textposition="inside",
+            marker_color=colors,
+            width=widths
+        ))
+
+        fig.update_layout(
+            title=title,
+            xaxis=dict(
+                showticklabels=True,
+                tickfont=dict(size=32)
+            ),
+            yaxis=dict(showticklabels=False),
+            showlegend=False,
+            bargap=0.5,
+            plot_bgcolor="white",
+            hovermode=False,
+            dragmode=False
+        )
+        fig.update_traces(hoverinfo="skip")
+
+        return fig
+
+    return (
+        podium_figure(top_kills, "Top 3 Killers"),
+        podium_figure(top_assists, "Top 3 Assisters")
+    )

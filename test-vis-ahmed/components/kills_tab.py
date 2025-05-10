@@ -46,5 +46,33 @@ def kills_tab_layout():
                                     {"label": "Satellite", "value": "Satellite"},
                                     {"label": "Schematic", "value": "Schematic"}],
                            value="Schematic", inline=True)
-        ], style={"padding": "0 10px"})  # Additional padding for the whole section
+        ], style={"padding": "0 10px"}),  # Additional padding for the whole section
+        
+        # html.Div([
+        #     html.Div([
+        #         dcc.Graph(id="kill-podium", style={"height": "500px"})
+        #     ], style={"width": "48%", "display": "inline-block"}),
+
+        #     html.Div([
+        #         dcc.Graph(id="assist-podium", style={"height": "500px"})
+        #     ], style={"width": "48%", "display": "inline-block", "float": "right"}),
+        # ], style={"marginTop": "40px"})
+        html.Div([
+    html.Div([
+        dcc.Graph(
+            id="kill-podium",
+            style={"height": "500px"},
+            config={"staticPlot": True, "displayModeBar": False}
+        )
+    ], style={"width": "48%", "display": "inline-block"}),
+
+    html.Div([
+        dcc.Graph(
+            id="assist-podium",
+            style={"height": "500px"},
+            config={"staticPlot": True, "displayModeBar": False}
+        )
+    ], style={"width": "48%", "display": "inline-block", "float": "right"}),
+], style={"marginTop": "40px"})
+
     ])
