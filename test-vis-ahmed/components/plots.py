@@ -157,58 +157,7 @@ def generate_kill_timeline(kills_df):
 
     return fig
 
-# def generate_podium(kills_df):
-#     # Count kills and assists
-#     top_kills = kills_df["Killer"].value_counts().nlargest(3)
-#     assist_cols = [col for col in kills_df.columns if col.startswith("Assist_")]
-#     top_assists = kills_df[assist_cols].stack().value_counts().nlargest(3)
 
-#     def podium_figure(series, title):
-#         # Sort to place 2nd left, 1st center, 3rd right
-#         podium_order = [1, 0, 2]
-#         names = series.index[podium_order]
-#         counts = series.values[podium_order]
-
-#         colors = ["silver", "gold", "#cd7f32"]  # silver, gold, bronze
-#         labels = ["#2", "#1", "#3"]
-#         heights = [13, 20, 8]
-#         widths = 3 * [1]
-#         # heights = [counts[0], counts[1], counts[2]]
-
-#         fig = go.Figure()
-#         fig.add_trace(go.Bar(
-#             x=labels,
-#             y=heights,
-#             text=names,
-#             textfont=dict(size=20),
-#             textposition="inside",
-#             marker_color=colors,
-#             width=widths
-#             # width=[0.4, 0.4, 0.4]
-#         ))
-
-#         fig.update_layout(
-#             title=title,
-#             # yaxis_title="Count",
-#             xaxis=dict(
-#                 showticklabels=True,
-#                 tickfont=dict(size=32)  # ⬅️ Increase label font size
-#             ),
-#             yaxis=dict(showticklabels=False),
-#             # xaxis=dict(showticklabels=True),
-#             showlegend=False,
-#             bargap=0.5,
-#             plot_bgcolor="white",
-#             hovermode=False,
-#             dragmode=False
-#         )
-
-#         return fig
-
-#     return (
-#         podium_figure(top_kills, "Top 3 Killers"),
-#         podium_figure(top_assists, "Top 3 Assisters")
-#     )
 def generate_podium(kills_df):
     # Count kills and assists
     top_kills = kills_df["Killer"].value_counts().nlargest(3)
@@ -239,26 +188,31 @@ def generate_podium(kills_df):
             )
             return fig
 
-        podium_order = [1, 0, 2][:n] if n == 3 else list(range(n))
-        names = series.index[podium_order]
-        counts = series.values[podium_order]
+        # Podium positions: left = #2, center = #1, right = #3
+        positions = [1, 0, 2]  # Indexes in value_counts()
+        labels = ["#2", "#1", "#3"]
+        colors = ["silver", "gold", "#cd7f32"]
+        heights = [13, 20, 8]
 
-        base_colors = ["silver", "gold", "#cd7f32"]
-        base_labels = ["#2", "#1", "#3"]
-        colors = [base_colors[i] for i in podium_order]
-        labels = [base_labels[i] for i in podium_order]
-        heights = [13, 20, 8][:n]
-        widths = [1] * n
+        data = []
+        for pos, label, color, height in zip(positions, labels, colors, heights):
+            if pos < n:
+                data.append({
+                    "label": label,
+                    "name": series.index[pos],
+                    "color": color,
+                    "height": height
+                })
 
         fig = go.Figure()
         fig.add_trace(go.Bar(
-            x=labels,
-            y=heights,
-            text=names,
+            x=[d["label"] for d in data],
+            y=[d["height"] for d in data],
+            text=[d["name"] for d in data],
             textfont=dict(size=20),
             textposition="inside",
-            marker_color=colors,
-            width=widths
+            marker_color=[d["color"] for d in data],
+            width=[1] * len(data)
         ))
 
         fig.update_layout(
@@ -282,3 +236,4 @@ def generate_podium(kills_df):
         podium_figure(top_kills, "Top 3 Killers"),
         podium_figure(top_assists, "Top 3 Assisters")
     )
+
