@@ -1,10 +1,14 @@
 
 import pandas as pd
+
+import numpy as np
+
 import plotly as plt
 import plotly.express as px
 import plotly.graph_objs as go
+
 from typing import Optional, List
-from os import path as pt
+import os
 
 from utils import format_time, encode_image_to_base64
 
@@ -94,7 +98,7 @@ def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
     for elem in time_monst['Subtype']:
         fig.add_layout_image(
             # Could do encorde for all in advance and cache
-            source=encode_image_to_base64(f"{pt.join(MAPICONS_PATH,elem)}.png"),
+            source=encode_image_to_base64(f"{os.path.join(MAPICONS_PATH,elem)}.png"),
             x=elem,
             y=0.05,  # Right at x-axis
             xref="x",
@@ -107,17 +111,82 @@ def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
         )
     return fig
 
+# == TIMELINES ==
+
+def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_step: float) -> go.Figure:
+    """ Creates a timeline using df's data, df needs columns: 'Time' and 'icon_name'.
+    Labels to show when hovering given separately. x_tol is the tolerance given to insert on the same line, y_step is to climb on y axis. 
+    """
+    fig = go.Figure()
+    y_values = []
+    previous_x = -100
+    previous_y = y_step
+    # Add one image per event
+    for _, row in df.iterrows():
+        img_path = f'../ressources/mapicons/{row['icon_name']}.png'
+        x = row['Time']
+        if x-(previous_x+x_tol) < 0: y = previous_y+y_step
+        else: y = y_step
+        if os.path.exists(img_path):
+            fig.add_layout_image(
+                source=encode_image_to_base64(img_path),
+                x=x,
+                y=y,
+                xref="x",
+                yref="paper",
+                sizex=1,
+                sizey=1,
+                xanchor="center",
+                yanchor="top",
+                layer="above"
+            )
+        else: # TODO: EXCEPTION HANDLING? 
+            print(f"Image not found: {img_path}")
+        # Keep track of y positioning
+        previous_x = x
+        previous_y = y
+        y_values.append(y)
+
+    fig.add_trace(go.Scatter(
+                x=df['Time'],
+                y=y_values,
+                mode='markers',
+                marker=dict(size=30, color='rgba(0,0,0,0)'),  # invisible
+                hoverinfo='text',
+                text=hover_labels,
+                showlegend=False
+            ))
+
+    fig.update_layout(
+        xaxis=dict(
+            range=[df['Time'].min() - 1, df['Time'].max() + 1],  # pad the view
+            #title="Time",
+            showline=True,
+            showticklabels=True,
+            tickmode='auto',
+        ),
+        yaxis=dict(
+            visible=False,
+        ),
+        margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
+        height=200, # TODO: DETERMINED BY DASH?
+    )
+
+
+def get_monsters_timeline(df: pd.DataFrame) -> go.Figure:
+    """ Creates a timeline of killed neutral objectives over time. 
+    Should receive the data for a single match, or aggregated data"""
+    hover_labels = [f"At: {format_time(row['Time'])}" for _, row in df.iterrows()]
+    # Team column is killer team
+    df['icon_name'] = df['Team'] + '_' + np.where(df['Subtype'].notna(), df['Subtype'], df['Type']) # TODO: Do in preprocessing?
+    return create_timeline(df, hover_labels, 0.33, 0.4)
 
 def get_structures_timeline(df: pd.DataFrame) -> go.Figure:
-    """ Creates a timeline of destroyed structures over time. Should receive the data for a single match."""
+    """ Creates a timeline of destroyed structures over time. 
+    Should receive the data for a single match, or aggregated data"""
     df['Time'].astype(float,False)
-    fig = px.scatter(
-        data_frame=df,
-        x='Time',
-        y=[""] * len(df),  # Keeps all points on a horizontal line
-        color='Team',
-        symbol='Type',
-    )
-    fig.update_traces(marker=dict(size=15))
-
-    return fig
+    
+    # Team column is destroyer team -> destroyed (Blue turret destroyed)
+    df['icon_name'] = f"{df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'})}_{np.where(df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')}"
+    hover_labels = [f"{row['Lane'] if "NEXUS" not in row['Type'] else row['Type'][:-1]+" "+row['Type'][-1]} {"Turret" if row['Type']!="INHIBITOR" else row['Type']}<br>At: {format_time(row['Time'])}" for _, row in df.iterrows()]
+    return create_timeline(df, hover_labels, 0.25, 0.33)
