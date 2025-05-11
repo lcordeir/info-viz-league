@@ -204,6 +204,7 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_s
         margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
         height=200, # TODO: DETERMINED BY DASH?
     )
+    return fig
 
 def get_monsters_timeline(df: pd.DataFrame) -> go.Figure:
     """ Creates a timeline of killed neutral objectives over time. 
@@ -219,6 +220,6 @@ def get_structures_timeline(df: pd.DataFrame) -> go.Figure:
     df['Time'].astype(float,False)
     
     # Team column is destroyer team -> destroyed (Blue turret destroyed)
-    df['icon_name'] = f"{df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'})}_{np.where(df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')}"
+    df['icon_name'] = df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'}) + '_' + np.where(df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')
     hover_labels = [f"{row['Lane'] if "NEXUS" not in row['Type'] else row['Type'][:-1]+" "+row['Type'][-1]} {"Turret" if row['Type']!="INHIBITOR" else row['Type']}<br>At: {format_time(row['Time'])}" for _, row in df.iterrows()]
     return create_timeline(df, hover_labels, 0.25, 0.33)
