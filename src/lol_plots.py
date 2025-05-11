@@ -146,11 +146,23 @@ def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
 
 # == TIMELINES ==
 
-def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_step: float) -> go.Figure:
-    """ Creates a timeline using df's data, df needs columns: 'Time' and 'icon_name'.
-    Labels to show when hovering given separately. x_tol is the tolerance given to insert on the same line, y_step is to climb on y axis. 
+# TODO: Might have to give 'x_size' in function of highest Time value of any timeline data
+def create_timeline(df: pd.DataFrame, hover_labels: List[str]) -> go.Figure:
+    """ Creates a timeline using df's data, df needs columns: 'count', 'Time' and 'icon_name'.
+    Labels to show when hovering given separately.
     """
     fig = go.Figure()
+    
+    x_size = df['Time'].max() + 1
+    
+    tot_count = df['count'].sum()
+    df['size'] = x_size/100+10*(df['count']/tot_count)  # Base size related with x axis and scales with proportion
+    max_s_icon = df['size'].max()
+
+    # x_tol defines when a neighbouring icon is to be offset by y_step. Both in funciton of icon size
+    x_tol = max_s_icon*0.15
+    y_step = max_s_icon
+
     y_values = []
     previous_x = -100
     previous_y = y_step
@@ -166,11 +178,11 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_s
                 x=x,
                 y=y,
                 xref="x",
-                yref="paper",
-                sizex=1,
-                sizey=1,
+                yref="y",
+                sizex=row['size'],
+                sizey=row['size'],
                 xanchor="center",
-                yanchor="top",
+                yanchor="middle",
                 layer="above"
             )
         else: # TODO: EXCEPTION HANDLING? 
@@ -179,27 +191,32 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_s
         previous_x = x
         previous_y = y
         y_values.append(y)
-
     fig.add_trace(go.Scatter(
                 x=df['Time'],
                 y=y_values,
                 mode='markers',
-                marker=dict(size=30, color='rgba(0,0,0,0)'),  # invisible
+                marker=dict(size=df['size'], color='rgba(0,0,0,0)'),  # invisible
                 hoverinfo='text',
                 text=hover_labels,
                 showlegend=False
             ))
-
+    print(max_s_icon)
+    print(round(max_s_icon*(np.unique(y_values).size+2))*100)
+    print(round(max_s_icon*(np.unique(y_values).size+2))*10)
     fig.update_layout(
         xaxis=dict(
-            range=[df['Time'].min() - 1, df['Time'].max() + 1],  # pad the view
+            range=[0, x_size],  # pad the view: game time
             #title="Time",
-            showline=True,
+            showline=False,
             showticklabels=True,
             tickmode='auto',
         ),
         yaxis=dict(
-            visible=False,
+            range=[0, max(y_values)+max_s_icon],  # pad the view: consider icon size
+            visible=True,
+            showline=True,
+            showticklabels=False,
+            tickvals=np.unique(y_values),   # To put horizontal lines at level of icons
         ),
         margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
         height=200, # TODO: DETERMINED BY DASH?
@@ -209,17 +226,25 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_s
 def get_monsters_timeline(df: pd.DataFrame) -> go.Figure:
     """ Creates a timeline of killed neutral objectives over time. 
     Should receive the data for a single match, or aggregated data"""
-    hover_labels = [f"At: {format_time(row['Time'])}" for _, row in df.iterrows()]
     # Team column is killer team
-    df['icon_name'] = df['Team'] + '_' + np.where(df['Subtype'].notna(), df['Subtype'], df['Type']) # TODO: Do in preprocessing?
-    return create_timeline(df, hover_labels, 0.33, 0.4)
+    if df['match_id'].unique().size > 1:
+        # Do not consider Subtype in aggregate, because too much detail
+        g_df = df.groupby(['Type','type_cardinality','Team']).aggregate(count=('Type','size'),Time=('Time','mean')).sort_values('Time').reset_index()
+        g_df['icon_name'] = g_df['Team'] + '_' + g_df['Type'] # TODO: Do in preprocessing?
+        hover_labels = [f"<b>{row['Type']}</b><br>At: {format_time(row['Time'])}<br>Count: {row['count']}" for _, row in g_df.iterrows()]
+    else: 
+        g_df = df
+        g_df['count'] = 1
+        g_df['icon_name'] = df['Team'] + '_' + np.where(df['Subtype'].notna(), df['Subtype'], df['Type']) # TODO: Do in preprocessing?
+        hover_labels = [f"<b>{row['Type']}</b><br>At: {format_time(row['Time'])}" for _, row in g_df.iterrows()]
+    return create_timeline(g_df, hover_labels)
 
 def get_structures_timeline(df: pd.DataFrame) -> go.Figure:
     """ Creates a timeline of destroyed structures over time. 
     Should receive the data for a single match, or aggregated data"""
     df['Time'].astype(float,False)
-    
-    # Team column is destroyer team -> destroyed (Blue turret destroyed)
-    df['icon_name'] = df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'}) + '_' + np.where(df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')
-    hover_labels = [f"{row['Lane'] if "NEXUS" not in row['Type'] else row['Type'][:-1]+" "+row['Type'][-1]} {"Turret" if row['Type']!="INHIBITOR" else row['Type']}<br>At: {format_time(row['Time'])}" for _, row in df.iterrows()]
-    return create_timeline(df, hover_labels, 0.25, 0.33)
+    g_df = df.groupby(['Type','Lane','Team']).aggregate(count=('Type','size'),Time=('Time','mean')).sort_values('Time').reset_index()
+    # Team column is destroyer team -> destroyed (Blue turret destroyed)    
+    g_df['icon_name'] = g_df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'}) + '_' + np.where(g_df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')
+    hover_labels = [f"<b>{row['Lane']} {f"{row['Type']} Turret" if row['Type']!="INHIBITOR" else row['Type']}</b><br>At: {format_time(row['Time'])}{"<br>Count: "+str(row['count']) if df['match_id'].unique().size > 1 else ""}" for _, row in g_df.iterrows()]
+    return create_timeline(g_df, hover_labels)
