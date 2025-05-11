@@ -12,7 +12,9 @@ import os
 
 from utils import format_time, encode_image_to_base64
 
-MAPICONS_PATH = pt.join("ressources","mapicons")
+MAPICONS_PATH = os.path.join("ressources","mapicons")
+
+# === MAP ===
 
 def add_map_bg(fig: go.Figure) -> go.Figure:
     fig.update_traces(opacity=0.66)
@@ -78,6 +80,37 @@ def get_kill_heatmap(df: pd.DataFrame, heatmap_binsize: int):
         color_continuous_scale='Viridis'
         )
     add_map_bg(fig)
+    return fig
+
+# === General Plots ==
+
+def get_objective_distribution(monsters: pd.DataFrame, normalized: bool=True) -> go.Figure:
+    """Returns a stacked barchart of monster type distribution by cardinality.
+    Takes monsters df as input and boolean to normalize data or not."""
+    # Count monsters by type for each cardinality
+    grouped_counts = monsters.groupby(['cardinality', 'Type']).aggregate(count=('Type','size'),avg_time=('Time','mean')).reset_index()
+    grouped_counts['avg_time_str'] = grouped_counts['avg_time'].apply(format_time)
+    if normalized:
+        grouped_counts['percent'] = grouped_counts['count'] / grouped_counts.groupby('cardinality')['count'].transform('sum')
+        grouped_counts['percent_str'] = (grouped_counts['percent'] * 100).map("{:.2f}%".format)
+        labels = {'cardinality': 'Cardinality', 'percent_str': 'Percentage', 'count':'Count', 'avg_time_str':'Average Time'}
+        hover_data={'cardinality': True, 'percent':False, 'percent_str': True, 'count': True, 'Type': True, 'avg_time_str':True}
+        y='percent'
+    else:
+        labels = {'cardinality': 'Cardinality', 'count': 'Count', 'avg_time_str':'Average Time'}
+        hover_data={'cardinality': True, 'Type': True, 'count': True, 'avg_time_str':True}
+        y='count'
+
+    fig = px.bar(
+        grouped_counts,
+        x='cardinality',
+        y=y,
+        color='Type',
+        title='Distribution of Types by Cardinality',
+        labels=labels,
+        hover_data=hover_data,
+        barmode='stack'
+    )
     return fig
 
 def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
@@ -171,7 +204,6 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_tol: float, y_s
         margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
         height=200, # TODO: DETERMINED BY DASH?
     )
-
 
 def get_monsters_timeline(df: pd.DataFrame) -> go.Figure:
     """ Creates a timeline of killed neutral objectives over time. 
