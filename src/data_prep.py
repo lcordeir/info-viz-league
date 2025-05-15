@@ -62,15 +62,15 @@ monsters['Subtype'] = monsters['Subtype'].apply(lambda x: drake_rename[x] if x i
 structures = structures.dropna()
 structures.loc[:,'Lane'] = structures.loc[:,'Lane'].apply(lambda x: x.split('_')[0])
 structures.loc[:,'Type'] = structures.loc[:,'Type'].apply(lambda x: x.split('_')[0])
-structures['type_cardinality'] = structures.sort_values("Time").groupby(["match_id","Type"]).cumcount().astype(int) # Specific for Nexus Tower assignation count
-# Set Lane to NEXUS and Type to UPPER/OUTER (unprecise assignation in fucntion of cardinality) if nexus 
+structures['type_cardinality'] = structures.sort_values("Time").groupby(["match_id","Type"]).cumcount().astype(int) # Specific for Nexus Tower assignation countW
+# Boolean mask where Type is "NEXUS"
 nexus_mask = structures['Type'] == 'NEXUS'
-structures.loc[nexus_mask, 'Lane'] = 'NEXUS'
-structures.loc[nexus_mask, 'Type'] = np.where(
+# Set 'Lane' to "UPPER" or "LOWER" based on even/odd type_cardinality
+structures.loc[nexus_mask, 'Lane'] = np.where(
     structures.loc[nexus_mask, 'type_cardinality'] % 2 == 0,
     'UPPER',
-    'LOWER')
-structures = structures[structures['Type'] != 'FOUNTAIN'] # Irrelevant info
+    'LOWER'
+)
 
 
 # Save csvs
