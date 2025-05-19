@@ -1,6 +1,8 @@
 from dash import html, dcc
+import dash_ag_grid as dag
 from typing import List
 from layout.filters.filtering import get_unique_values
+from layout.filters.filtering import combine_team_player_position
 
 def filters_layout() -> List: 
     return [
@@ -40,31 +42,44 @@ def filters_metadata() -> html.Div:
 
 
 def filters_team_player_position() -> html.Div:
+    df = combine_team_player_position()
+
+    columnDefs = [
+        {
+            "headerName": "Teams",
+            "field": "Teams",
+            "filter": "agSetColumnFilter",
+        },
+        {
+            "headerName": "Players",
+            "field": "Players",
+            "filter": "agSetColumnFilter",
+        },
+        {
+            "headerName": "Position",
+            "field": "Position",
+            "filter": "agSetColumnFilter",
+        },
+    ]
+
+    defaultColDef = {"flex": 1, "filter": True}
+
+    grid = dag.AgGrid(
+        id="filter_team_player_position",
+        rowData=df.to_dict("records"),
+        columnDefs=columnDefs,
+        defaultColDef=defaultColDef,
+        dashGridOptions={"sideBar": "filters"},
+        style={"height": 300},
+    )
+
     return \
         html.Div([
             html.Details([
                 html.Summary('Filter by Teams, Players and Positions'),
-                html.Div([
-                    "TODO"
-                ]),
-                html.Button('Reset filters', id='filters_teams_reset', n_clicks=0, style={'margin': '10px'}),
-            ], open=False),
+                grid
+            ], open=True),
         ])
-#     unique_teams = get_unique_values('Team')
-#     unique_players = get_unique_values('Player')
-#     unique_positions = get_unique_values('Position')
-
-#     return html.Table([
-#         html.Tr([
-#             html.Td([html.B("Team"), dcc.Checklist(unique_teams, unique_teams, id='team_map_filter', inline=True)]),
-#             html.Td([html.B("Player"), dcc.Checklist(unique_players, unique_players, id='player_map_filter', inline=True)])
-#         ]),
-#         html.Tr([
-#             html.Td([html.B("Position"), dcc.Checklist(unique_positions, unique_positions, id='position_map_filter', inline=True)])
-#         ])
-#     ], style = {'width': '100%',
-#                 'textAlign': 'left', 
-#     })
 
 def filter_champions() -> html.Div:
     return \
