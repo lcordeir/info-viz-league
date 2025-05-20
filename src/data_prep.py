@@ -52,7 +52,7 @@ matchinfo['redTeamTag'] = matchinfo['redTeamTag'].str.upper()
 
 # Kills
 ## Position
-kills = kills.dropna()
+kills = kills.dropna(subset=['Victim']) # On Victim, because (although unclear) victim could die from neutral entity. Assists can and may be NaN
 kills.loc[:,'x_pos'] = pd.to_numeric(kills.loc[:,'x_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
 kills.loc[:,'y_pos'] = pd.to_numeric(kills.loc[:,'y_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
 ## Team tags
@@ -62,11 +62,14 @@ kills['Victim_Team'] = np.where(kills['Team'] == 'BLUE', kills['redTeamTag'], ki
 kills.drop(columns=['blueTeamTag', 'redTeamTag'], inplace=True)
 ## Player names
 def extract_username(full_str, team_tag):
+    if pd.isna(full_str): # Assists can be NaN. At this point no Killer/Victim/Time is NaN (verified)
+        return full_str
+    
     parts = full_str.split(" ")
     if len(parts) < 2:
         return full_str  # Unusual format, return as-is (team tag missing)
-    if parts[0].upper() == team_tag.upper():
-        return parts[-2] if len(parts) > 2 else parts[-1] # First part is team tag, return rest
+    if parts[0].upper() == team_tag:
+        return " ".join(parts[1:]) # First part is team tag, return rest
     else:
         return full_str  # Assume already a username
 cols_to_clean = ['Killer', 'Victim', 'Assist_1', 'Assist_2', 'Assist_3', 'Assist_4']
