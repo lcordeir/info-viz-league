@@ -41,8 +41,9 @@ def combine_assists(row: pd.Series, assist_cols: List[str]) -> Optional[str]:
 
 def get_kill_plot_single(df: pd.DataFrame) -> go.Figure:
     assist_columns = ["Assist_1", "Assist_2", "Assist_3", "Assist_4"]
-    assists = df.apply(lambda x: combine_assists(x, assist_columns), axis=1)
-    formatted_time = df['Time'].apply(lambda x: format_time(float(x)))
+    df['hover_labels'] = [f"<b>{row['Victim']}</b><br>By: {row['Killer']}<br>Assisted by: {combine_assists(row, assist_columns)}<br>At: {format_time(row['Time'])}" for _, row in df.iterrows()]
+    red_team = np.where(df['Team']=="BLUE",df['Victim_Team'],df['Killer_Team'])[0] # Data being "kills", Team colour relates to killer team. More intuitive for user to have the victim's colour -> "A blue player died there"
+    blue_team = np.where(df['Team']=="RED",df['Victim_Team'],df['Killer_Team'])[0]
     fig = px.scatter(
         data_frame=df,
         x=df['x_pos'],
@@ -50,29 +51,25 @@ def get_kill_plot_single(df: pd.DataFrame) -> go.Figure:
         title="Deaths",
         width=800,
         height=800,
-        #color=df['Team'].apply(lambda x: 'RED' if x=='BLUE' else 'BLUE'), # Binds colour to victim (flip), more intuitive for the one looking
-        color='Team',
-        color_discrete_map={'RED':'blue','BLUE':'red'},
-        labels={'Team':'Team','BLUE': 'Red', 'RED': 'Blue'},
-        hover_name='Victim',
-        hover_data={
-            'x_pos': False,
-            'y_pos': False,
-            'Team': False,
-            'At ': formatted_time,
-            'Killer': True,
-            'Assists': assists,
-        }
+        color='Victim_Team',
+        color_discrete_map={blue_team:'blue',red_team:'red'},
+        labels={'Victim_Team':'Team'},
+        custom_data=['hover_labels'],  # Pass hover_labels as custom_data
     )
-    fig.update_traces(marker=dict(size=15))
+    fig.update_traces(
+        marker=dict(size=15),
+        hovertemplate="%{customdata[0]}<extra></extra>"  # Use only the value from custom_data
+        )
+    df.drop(columns=['hover_labels'],inplace=True)
     return fig
 
 def get_kill_plot_aggregate(df: pd.DataFrame, heatmap_binsize: int) -> go.Figure:
-    df_div = df
-    df_div['x_pos'] = (df_div['x_pos']/df_div['x_pos'].max()*heatmap_binsize).apply(math.floor)
-    df_div['y_pos'] = (df_div['y_pos']/df_div['y_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div = df.copy()
+    df_div['x_pos'] = (df_div['x_pos']/df['x_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div['y_pos'] = (df_div['y_pos']/df['y_pos'].max()*heatmap_binsize).apply(math.floor)
     df_div = df_div.groupby(['x_pos', 'y_pos', 'Team']).agg(count=('Time', 'count'),avg_time=('Time', 'mean')).reset_index()
-    formatted_time = df_div['avg_time'].apply(lambda x: format_time(float(x)))
+    df_div['Team'] = np.where(df_div['Team'] == 'BLUE', "Red Side", " Blue Side")
+    df_div['hover_labels'] = [f"<b>Count: {row['count']}</b><br>At: {format_time(row['avg_time'])}" for _, row in df_div.iterrows()]
     fig = px.scatter(
         data_frame=df_div,
         y=df_div['y_pos'],
@@ -81,19 +78,18 @@ def get_kill_plot_aggregate(df: pd.DataFrame, heatmap_binsize: int) -> go.Figure
         width=800,
         height=800,
         color='Team',
-        color_discrete_map={'RED':'blue','BLUE':'red'},
-        labels={'Team':'Team','BLUE': 'Red', 'RED': 'Blue'},
-        hover_data={
-            'count': True,
-            'At ': formatted_time,
-        },
+        #color_discrete_map={'RED':'blue','BLUE':'red'},
         size='count',
+        custom_data=['hover_labels'],  # Pass hover_labels as custom_data
     )
+    fig.update_traces(
+        hovertemplate="%{customdata[0]}<extra></extra>"  # Use only the value from custom_data
+        )
     return fig
 
-def get_kill_plot(df: pd.DataFrame) -> go.Figure:
+def get_kill_plot(df: pd.DataFrame, heatmap_binsize: int = 25) -> go.Figure:
     if df['match_id'].unique().size == 1: fig = get_kill_plot_single(df)
-    else: fig = get_kill_plot_aggregate(df)
+    else: fig = get_kill_plot_aggregate(df, heatmap_binsize)
     add_map_bg(fig)
     return fig
 
@@ -229,9 +225,6 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str]) -> go.Figure:
                 text=hover_labels,
                 showlegend=False
             ))
-    print(max_s_icon)
-    print(round(max_s_icon*(np.unique(y_values).size+2))*100)
-    print(round(max_s_icon*(np.unique(y_values).size+2))*10)
     fig.update_layout(
         xaxis=dict(
             range=[0, x_size],  # pad the view: game time
