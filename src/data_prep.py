@@ -16,13 +16,18 @@ structures = pd.read_csv(pt.join("data","structures.csv"))
 
 # All
 ## IDs
+### Clean mathcinfo
+"""Amongst the oddities in the dataset, there were match entries with an associated address, but missing data like player names (some being '=' the others NaN).
+Or missing team tags. The addresses links are to websites which are no longer kept up (domain changes and some data being archived over the years).
+We drop these rows before creating the ids. Once we set the ids to other dfs we only keep the rows fitting an associated address and thus game. Automatically dropping the related rows in other dfs."""
+matchinfo = matchinfo.dropna() # match_ids based on matchinfo
 ### Create ids
 match_ids = matchinfo["Address"].reset_index()
 match_ids = match_ids.rename(columns={"index":"match_id"})
 ### Assign ids
 data_dfs = [bans,gold,kills,matchinfo,monsters,structures]
 for i in range(len(data_dfs)):
-    data_dfs[i]=data_dfs[i].merge(match_ids, on="Address",how="left")
+    data_dfs[i]=data_dfs[i].merge(match_ids, on="Address",how="inner") # Ensure rows without association to address to match_id are dropped
     data_dfs[i].drop(columns=["Address"],inplace=True)
 bans,gold,kills,matchinfo,monsters,structures = data_dfs
 ## Cardinality
@@ -41,12 +46,37 @@ bans = bans.rename(columns={"ban_1":"Ban1","ban_2":"Ban2","ban_3":"Ban3","ban_4"
 bans = bans.drop_duplicates().pivot(index='match_id',columns='Team',values=["Ban1","Ban2","Ban3","Ban4","Ban5"])
 bans.columns = bans.columns.map(lambda col: f"{col[1]}{col[0]}")
 matchinfo = matchinfo.merge(bans,on='match_id')
+## Team Tags fully capitalized
+matchinfo['blueTeamTag'] = matchinfo['blueTeamTag'].str.upper()
+matchinfo['redTeamTag'] = matchinfo['redTeamTag'].str.upper()
 
 # Kills
 ## Position
 kills = kills.dropna()
 kills.loc[:,'x_pos'] = pd.to_numeric(kills.loc[:,'x_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
 kills.loc[:,'y_pos'] = pd.to_numeric(kills.loc[:,'y_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
+## Team tags
+kills = kills.merge(matchinfo.reset_index()[['match_id', 'blueTeamTag', 'redTeamTag']], on='match_id', how='left') # Merge kills with team tags based on match_id
+kills['Killer_Team'] = np.where(kills['Team'] == 'BLUE', kills['blueTeamTag'], kills['redTeamTag']) # Assign Killer_Team based on 'Team' column
+kills['Victim_Team'] = np.where(kills['Team'] == 'BLUE', kills['redTeamTag'], kills['blueTeamTag']) # Assign Victim_Team based on 'Team' column
+kills.drop(columns=['blueTeamTag', 'redTeamTag'], inplace=True)
+## Player names
+def extract_username(full_str, team_tag):
+    parts = full_str.split(" ")
+    if len(parts) < 2:
+        return full_str  # Unusual format, return as-is (team tag missing)
+    if parts[0].upper() == team_tag.upper():
+        return parts[-2] if len(parts) > 2 else parts[-1] # First part is team tag, return rest
+    else:
+        return full_str  # Assume already a username
+cols_to_clean = ['Killer', 'Victim', 'Assist_1', 'Assist_2', 'Assist_3', 'Assist_4']
+for col in cols_to_clean:
+    if 'Victim' in col:
+        kills[col] = kills.apply(lambda row: extract_username(row[col], row['Victim_Team']), axis=1)
+    else:
+        kills[col] = kills.apply(lambda row: extract_username(row[col], row['Killer_Team']), axis=1)
+
+
 
 # Monsters
 ## Subtype
