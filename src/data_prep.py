@@ -49,6 +49,15 @@ matchinfo = matchinfo.merge(bans,on='match_id')
 ## Team Tags fully capitalized
 matchinfo['blueTeamTag'] = matchinfo['blueTeamTag'].str.upper()
 matchinfo['redTeamTag'] = matchinfo['redTeamTag'].str.upper()
+## Normalize player names (Some have varying capitalization)
+player_cols = matchinfo.iloc[:,9::2].iloc[:,:10].columns
+all_usernames = pd.Series(pd.unique(matchinfo[player_cols].values.ravel())).dropna()
+most_common_variants = ( # Map lowercased usernames to their most common variant
+    all_usernames.groupby(all_usernames.str.lower())
+    .agg(lambda x: x.value_counts().idxmax())
+    .to_dict())
+for col in player_cols:
+    matchinfo[col] = matchinfo[col].str.lower().map(most_common_variants) # Keep only most recurring variatnt of username
 
 # Kills
 ## Position
@@ -78,7 +87,7 @@ for col in cols_to_clean:
         kills[col] = kills.apply(lambda row: extract_username(row[col], row['Victim_Team']), axis=1)
     else:
         kills[col] = kills.apply(lambda row: extract_username(row[col], row['Killer_Team']), axis=1)
-
+    kills[col] = kills[col].str.lower().map(most_common_variants) # Keep only most recurring variatnt of username
 
 
 # Monsters
