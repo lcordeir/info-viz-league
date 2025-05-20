@@ -5,7 +5,7 @@
 import pandas as pd
 from typing import List, Dict, Any
 from os import path as pt
-from dash import Dash, html, dcc, dash_table, Input, Output, callback, no_update
+from dash import Dash, html, dcc, dash_table, Input, Output, State, callback, no_update
 import plotly.express as px
 
 @callback(
@@ -19,8 +19,8 @@ import plotly.express as px
 def store_intermediate_df(filter_year, filter_season, filter_league, filter_type):
     df = pd.read_csv(pt.join("data","matchinfo_mod.csv"))
 
-    df = df[df['Year'].isin(filter_year)]
     df = df[df['Season'].isin(filter_season)]
+    df = df[df['Year'].isin(filter_year)]
     df = df[df['League'].isin(filter_league)]
     df = df[df['Type'].isin(filter_type)]
 
@@ -32,10 +32,10 @@ def store_intermediate_df(filter_year, filter_season, filter_league, filter_type
     Output('filter_league', 'value'),
     Output('filter_type', 'value'),
     Input('filters_metadata_reset', "n_clicks"),
-    Input('filter_year', 'options'),
-    Input('filter_season', 'options'),
-    Input('filter_league', 'options'),
-    Input('filter_type', 'options'),
+    State('filter_year', 'options'),
+    State('filter_season', 'options'),
+    State('filter_league', 'options'),
+    State('filter_type', 'options'),
 )
 def reset_metadata_filters(n_clicks, filter_year_options, filter_season_options, filter_league_options, filter_type_options):
     return filter_year_options, filter_season_options, filter_league_options, filter_type_options
@@ -44,7 +44,7 @@ def reset_metadata_filters(n_clicks, filter_year_options, filter_season_options,
 @callback(
     Output("filter_team_player_position", "rowData"),
     Input("stored_intermediate_match_info", 'data'),
-    Input("match_info_columns", 'data')
+    State("match_info_columns", 'data')
 )
 def combine_team_player_position(intermediate_records, cols) -> pd.DataFrame:
     """
@@ -107,11 +107,24 @@ def combine_team_player_position(intermediate_records, cols) -> pd.DataFrame:
 
 @callback(
     Output("filter_games", "rowData"),
+    # Output("filter_games", "selectedRows"),
     Input("stored_intermediate_match_info", 'data'),
-    Input("match_info_columns", 'data')
+    State("match_info_columns", 'data')
 )
 def get_games(intermediate_records, cols):
     df = pd.DataFrame.from_records(intermediate_records, columns=cols)
     # TODO rajouter le gold et le nombre de kills dans match_info pour faire comme ce que Loïc à envoyer
     df = df[["match_id", "Year", "League", "Season", "Type", "bResult", "blueTeamTag", "redTeamTag", "rResult", "gamelength"]]
-    return df.to_dict("records")
+    return df.to_dict("records")# , df.to_dict("records")
+
+@callback(
+    Output("stored_filtetered_match_info", "data"),
+    Input("filter_games", "selectedRows"),
+    Input("filter_team_player_position", "selectedRows")
+)
+def store_filtered_match_info(games_rows, teams_rows):
+    print(type(games_rows))
+    if isinstance(games_rows, list):
+        print(len(games_rows))
+
+    return

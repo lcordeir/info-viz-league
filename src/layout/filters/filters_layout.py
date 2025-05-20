@@ -99,6 +99,8 @@ def filter_games() -> html.Div:
         {
             "headerName": "Match nr.",
             "field": "match_id",
+            "checkboxSelection": True,
+            "headerCheckboxSelection": True,
         },
         {
             "headerName": "Year",
@@ -142,12 +144,6 @@ def filter_games() -> html.Div:
     defaultColDef = {
         "flex": 1,
         "filter": True,
-        "checkboxSelection": {
-            "function": 'params.column == params.columnApi.getAllDisplayedColumns()[0]'
-        },
-        "headerCheckboxSelection": {
-            "function": 'params.column == params.columnApi.getAllDisplayedColumns()[0]'
-        },
     }
 
     grid = dag.AgGrid(
