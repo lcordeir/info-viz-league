@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objs as go
 
 from typing import Optional, List
-import os
+import os, math
 
 from utils import format_time, encode_image_to_base64
 
@@ -67,10 +67,10 @@ def get_kill_plot_single(df: pd.DataFrame) -> go.Figure:
     fig.update_traces(marker=dict(size=15))
     return fig
 
-def get_kill_plot_aggregate(df: pd.DataFrame) -> go.Figure:
+def get_kill_plot_aggregate(df: pd.DataFrame, heatmap_binsize: int) -> go.Figure:
     df_div = df
-    df_div['x_pos'] = (df_div['x_pos']/kills['x_pos'].max()*heatmap_binsize).apply(math.floor)
-    df_div['y_pos'] = (df_div['y_pos']/kills['y_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div['x_pos'] = (df_div['x_pos']/df_div['x_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div['y_pos'] = (df_div['y_pos']/df_div['y_pos'].max()*heatmap_binsize).apply(math.floor)
     df_div = df_div.groupby(['x_pos', 'y_pos', 'Team']).agg(count=('Time', 'count'),avg_time=('Time', 'mean')).reset_index()
     formatted_time = df_div['avg_time'].apply(lambda x: format_time(float(x)))
     fig = px.scatter(
