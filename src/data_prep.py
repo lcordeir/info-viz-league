@@ -62,6 +62,7 @@ for col in player_cols:
 # Kills
 ## Position
 kills = kills.dropna(subset=['Victim']) # On Victim, because (although unclear) victim could die from neutral entity. Assists can and may be NaN
+kills = kills[kills['Killer'] != 'TooEarly'] # Special case
 kills.loc[:,'x_pos'] = pd.to_numeric(kills.loc[:,'x_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
 kills.loc[:,'y_pos'] = pd.to_numeric(kills.loc[:,'y_pos'],errors='coerce') # Convert kill positions to numbers, coerce will convert or if not possible replace with NaN
 ## Team tags

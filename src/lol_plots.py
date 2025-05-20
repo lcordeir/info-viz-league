@@ -39,7 +39,7 @@ def combine_assists(row: pd.Series, assist_cols: List[str]) -> Optional[str]:
     assists = [str(row[col]) for col in assist_cols if pd.notna(row[col])]
     return ", ".join(assists) if assists else None
 
-def get_kill_plot(df: pd.DataFrame) -> go.Figure:
+def get_kill_plot_single(df: pd.DataFrame) -> go.Figure:
     assist_columns = ["Assist_1", "Assist_2", "Assist_3", "Assist_4"]
     assists = df.apply(lambda x: combine_assists(x, assist_columns), axis=1)
     formatted_time = df['Time'].apply(lambda x: format_time(float(x)))
@@ -65,6 +65,35 @@ def get_kill_plot(df: pd.DataFrame) -> go.Figure:
         }
     )
     fig.update_traces(marker=dict(size=15))
+    return fig
+
+def get_kill_plot_aggregate(df: pd.DataFrame) -> go.Figure:
+    df_div = df
+    df_div['x_pos'] = (df_div['x_pos']/kills['x_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div['y_pos'] = (df_div['y_pos']/kills['y_pos'].max()*heatmap_binsize).apply(math.floor)
+    df_div = df_div.groupby(['x_pos', 'y_pos', 'Team']).agg(count=('Time', 'count'),avg_time=('Time', 'mean')).reset_index()
+    formatted_time = df_div['avg_time'].apply(lambda x: format_time(float(x)))
+    fig = px.scatter(
+        data_frame=df_div,
+        y=df_div['y_pos'],
+        x=df_div['x_pos'],
+        title="Deaths",
+        width=800,
+        height=800,
+        color='Team',
+        color_discrete_map={'RED':'blue','BLUE':'red'},
+        labels={'Team':'Team','BLUE': 'Red', 'RED': 'Blue'},
+        hover_data={
+            'count': True,
+            'At ': formatted_time,
+        },
+        size='count',
+    )
+    return fig
+
+def get_kill_plot(df: pd.DataFrame) -> go.Figure:
+    if df['match_id'].unique().size == 1: fig = get_kill_plot_single(df)
+    else: fig = get_kill_plot_aggregate(df)
     add_map_bg(fig)
     return fig
 
