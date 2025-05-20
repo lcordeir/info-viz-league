@@ -27,5 +27,6 @@ def create_layout():
             }),
         ], style={
             'display': 'flex'
-        })
+        }),
+        dcc.Store(id="filtered_match_info")
     ])
