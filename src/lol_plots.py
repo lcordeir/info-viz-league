@@ -171,6 +171,25 @@ def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
 
 # == TIMELINES ==
 
+def set_timeline_margins_scale(fig: go.Figure, x_size: int, y_range: list[int], y_tickvals: list[int]):
+    fig.update_layout(
+        xaxis=dict(
+            range=[0, x_size],  # pad the view: game time
+            showline=False,
+            showticklabels=True,
+            tickmode='auto',
+        ),
+        yaxis=dict(
+            range=y_range,  # pad the view: consider icon size
+            visible=True,
+            showline=True,
+            showticklabels=False,
+            tickvals=y_tickvals,   # To put horizontal lines at level of icons
+        ),
+        margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
+        height=200, # TODO: DETERMINED BY DASH?
+    )
+
 # TODO: Might have to give 'x_size' in function of highest Time value of any timeline data
 def create_timeline(df: pd.DataFrame, hover_labels: List[str]) -> go.Figure:
     """ Creates a timeline using df's data, df needs columns: 'count', 'Time' and 'icon_name'.
@@ -225,24 +244,7 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str]) -> go.Figure:
                 text=hover_labels,
                 showlegend=False
             ))
-    fig.update_layout(
-        xaxis=dict(
-            range=[0, x_size],  # pad the view: game time
-            #title="Time",
-            showline=False,
-            showticklabels=True,
-            tickmode='auto',
-        ),
-        yaxis=dict(
-            range=[0, max(y_values)+max_s_icon],  # pad the view: consider icon size
-            visible=True,
-            showline=True,
-            showticklabels=False,
-            tickvals=np.unique(y_values),   # To put horizontal lines at level of icons
-        ),
-        margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
-        height=200, # TODO: DETERMINED BY DASH?
-    )
+    set_timeline_margins_scale(fig, x_size, [0, max(y_values)+max_s_icon], np.unique(y_values))
     return fig
 
 def get_monsters_timeline(df: pd.DataFrame) -> go.Figure:
@@ -270,3 +272,55 @@ def get_structures_timeline(df: pd.DataFrame) -> go.Figure:
     g_df['icon_name'] = g_df['Team'].replace({'BLUE': 'RED', 'RED': 'BLUE'}) + '_' + np.where(g_df['Type'] == 'INHIBITOR', 'INHIBITOR', 'TURRET')
     hover_labels = [f"<b>{row['Lane']} {f"{row['Type']} Turret" if row['Type']!="INHIBITOR" else row['Type']}</b><br>At: {format_time(row['Time'])}{"<br>Count: "+str(row['count']) if df['match_id'].unique().size > 1 else ""}" for _, row in g_df.iterrows()]
     return create_timeline(g_df, hover_labels)
+
+def create_kills_timeline(df: pd.DataFrame, hover_labels: List[str]) -> go.Figure:
+    """ Creates a timeline using df's data, df needs columns: 'count', 'Time'.
+    Labels to show when hovering given separately.
+    """
+    
+    x_size = df['Time'].max() + 1
+    df['hover_labels'] = hover_labels
+    fig = px.scatter(
+            data_frame=df,
+            x='Time',
+            y=np.ones(df.shape[0]),
+            color='Team',
+            size='count',
+            custom_data=['hover_labels'],  # Pass hover_labels as custom_data
+    )
+    fig.update_traces(
+        marker=dict(sizemin=6), # Else there are many we don't see in aggregate
+        hovertemplate="%{customdata[0]}<extra></extra>"  # Use only the value from custom_data
+        )
+    set_timeline_margins_scale(fig, x_size, [0,3], np.ones(df.shape[0]))
+    fig.update_layout(  # Resize plot
+        xaxis=dict(
+            range=[0, x_size],  # pad the view: game time
+            showline=False,
+            showticklabels=True,
+            tickmode='auto',
+        ),
+        yaxis=dict(
+            visible=True,
+            showline=True,
+            showticklabels=False,
+            tickvals=np.ones(df.shape[0]),   # To put horizontal lines at level of icons
+        ),
+        margin=dict(t=40, b=40), # TODO: DETERMINED BY DASH?
+        height=200, # TODO: DETERMINED BY DASH?
+    )
+    return fig
+
+def get_kills_timeline(df: pd.DataFrame) -> go.Figure:
+    """ Creates a timeline of killed neutral objectives over time. 
+    Should receive the data for a single match, or aggregated data"""
+    # Team column is killer team
+    if df['match_id'].unique().size > 1:
+        # Do not consider Subtype in aggregate, because too much detail
+        g_df = df.groupby(['cardinality','Team']).aggregate(count=('Team','count'),Time=('Time','mean')).sort_values('Time').reset_index()
+        hover_labels = [f"Count: {row['count']}<br>At: {format_time(row['Time'])}<br>Cardinality: {row['cardinality']}" for _, row in g_df.iterrows()]
+    else: 
+        g_df = df
+        g_df['count'] = 1
+        hover_labels = [f"<b>{row['Victim']}</b><br>By: {row['Killer']}<br>Assisted by: {combine_assists(row, assist_columns)}<br>At: {format_time(row['Time'])}" for _, row in df.iterrows()]
+    return create_kills_timeline(g_df, hover_labels)
