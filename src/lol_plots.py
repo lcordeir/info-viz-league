@@ -13,17 +13,18 @@ import os, math
 
 from utils import format_time, encode_image_to_base64
 
-MAPICONS_PATH = os.path.join("ressources","MAPICONS")
+MAPICONS_PATH = os.path.join("ressources","mapicons")
 
 # === MAP ===
 
 def add_map_bg(fig: go.Figure) -> go.Figure:
     """Modifies a figure to add the map as a background to it."""
     fig.update_traces(opacity=0.66)
+    img_path = os.path.join("ressources","SummonersRift.webp")
     fig.update_layout(
         images=[
             dict(
-                source="..\\ressources\\SummonersRift.webp",  # Path or URL to the PNG/SVG image
+                source=encode_image_to_base64(img_path),  # Path or URL to the PNG/SVG image
                 xref="paper",  # Coordinates system: 'paper' means relative to the paper's area
                 yref="paper",
                 x=0,  # Positioning the image
@@ -31,7 +32,7 @@ def add_map_bg(fig: go.Figure) -> go.Figure:
                 sizex=1,  # Image width as a fraction of plot area
                 sizey=1,  # Image height as a fraction of plot area
                 opacity=0.3,  # Image transparency (0 = fully transparent, 1 = fully opaque)
-                layer="below"  # Ensures the image stays below the plot
+                #layer="below"  # Ensures the image stays below the plot
             )
         ],
     )
@@ -39,8 +40,9 @@ def add_map_bg(fig: go.Figure) -> go.Figure:
 
 def get_map_bg(xref: str="paper", yref: str="paper", size: int=1) -> dict:
     """Creates a dict containing the information relating to the map background to add on the map"""
+    img_path = os.path.join("ressources","SummonersRift.webp")
     return dict(
-        source="..\\ressources\\SummonersRift.webp",  # Path or URL to the PNG/SVG image
+        source=encode_image_to_base64(img_path),  # Path or URL to the PNG/SVG image
         xref=xref,  # Coordinates system: 'paper' means relative to the paper's area
         yref=yref,
         x=0,  # Positioning the image
@@ -196,8 +198,8 @@ def get_first_Drake_avg(monsters: pd.DataFrame) -> go.Figure:
     return fig
 
 # == TIMELINES ==
-def set_timeline_margins_scale(fig: go.Figure, x_size: int):
-    xaxis_common = {
+def set_timeline_margins_scale(fig: go.Figure, x_size: int) -> None:
+    xaxis_common = {    # Common xaxis settings for the timelines
         "range": [0, x_size],
         "showline": False,
         "showticklabels": True,
@@ -208,12 +210,21 @@ def set_timeline_margins_scale(fig: go.Figure, x_size: int):
     for row in range(2, 5):
         fig.update_xaxes(row=row, **xaxis_common)
     fig.update_layout(
-        margin=dict(l=60, r=60, t=50, b=50), # TODO: DETERMINED BY DASH?
+        margin=dict(l=60, r=60, t=50, b=50),
         height=1500, # TODO: DETERMINED BY DASH?
         plot_bgcolor='rgba(0,0,0,0)',  # transparent background for all plots
+        legend=dict(
+            x=0.71,        # Slightly right of the second column (usually x=1 is right edge)
+            y=0.95,        # Near the top of the figure (y=1 is top)
+            xanchor='left', # Anchor legend's left edge at x position
+            yanchor='top',  # Anchor legend's top edge at y position
+            bgcolor='rgba(255,255,255,0.8)',  # semi-transparent background to stand out
+            bordercolor='black',
+            borderwidth=1
+        )
     )
 
-def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_size: int, xyref_nb: str = "") -> go.Figure:
+def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_size: int, xyref_nb: str = "") -> tuple[go.Figure, np.ndarray[int], int, List[dict]]:
     """ Creates a timeline using df's data, df needs columns: 'count', 'Time' and 'icon_name'.
     Labels to show when hovering given separately.
     """
@@ -234,7 +245,7 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_size: int, xyre
     layout_images = []
     # Add one image per event
     for _, row in df.iterrows():
-        img_path = f'../ressources/mapicons/{row['icon_name']}.png'
+        img_path = f'{MAPICONS_PATH}/{row['icon_name']}.png'
         x = row['Time']
         if x-(previous_x+x_tol) < 0: y = previous_y+y_step
         else: y = y_step
@@ -269,7 +280,7 @@ def create_timeline(df: pd.DataFrame, hover_labels: List[str], x_size: int, xyre
     #set_timeline_margins_scale(fig, x_size, [0, max(y_values)+max_s_icon], np.unique(y_values))
     return fig, np.unique(y_values), max(y_values)+max_s_icon, layout_images
 
-def get_monsters_timeline(df: pd.DataFrame, x_size: int) -> go.Figure:
+def get_monsters_timeline(df: pd.DataFrame, x_size: int) -> tuple[go.Figure, np.ndarray[int], int, List[dict]]:
     """ Creates a timeline of killed neutral objectives over time. 
     Should receive the data for a single match, or aggregated data"""
     # Team column is killer team
@@ -285,7 +296,7 @@ def get_monsters_timeline(df: pd.DataFrame, x_size: int) -> go.Figure:
         hover_labels = [f"<b>{row['Type']}</b><br>At: {format_time(row['Time'])}" for _, row in g_df.iterrows()]
     return create_timeline(g_df, hover_labels, x_size, "3") # xyref is the 3rd subplot
 
-def get_structures_timeline(df: pd.DataFrame, x_size: int) -> go.Figure:
+def get_structures_timeline(df: pd.DataFrame, x_size: int) -> tuple[go.Figure, np.ndarray[int], int, List[dict]]:
     """ Creates a timeline of destroyed structures over time. 
     Should receive the data for a single match, or aggregated data"""
     df['Time'].astype(float,False)
@@ -295,7 +306,7 @@ def get_structures_timeline(df: pd.DataFrame, x_size: int) -> go.Figure:
     hover_labels = [f"<b>{row['Lane']} {f"{row['Type']} Turret" if row['Type']!="INHIBITOR" else row['Type']}</b><br>At: {format_time(row['Time'])}{"<br>Count: "+str(row['count']) if df['match_id'].unique().size > 1 else ""}" for _, row in g_df.iterrows()]
     return create_timeline(g_df, hover_labels, x_size, "4") # xyref is the 4th subplot
 
-def create_kills_timeline(df: pd.DataFrame, team_name_col: List[(str)], hover_labels: List[str]) -> go.Figure:
+def create_kills_timeline(df: pd.DataFrame, team_name_col: List[(str)], hover_labels: List[str]) -> tuple[go.Figure, List[int], int]:
     """ Creates a timeline using df's data, df needs columns: 'count', 'Time' and 'icon_name'.
     Labels to show when hovering given separately.
     """
@@ -324,7 +335,7 @@ def create_kills_timeline(df: pd.DataFrame, team_name_col: List[(str)], hover_la
     #set_timeline_margins_scale(fig, x_size, [0,2], np.ones(df.shape[0]))
     return fig, [1,2], 3
 
-def get_kills_timeline(df: pd.DataFrame) -> go.Figure:
+def get_kills_timeline(df: pd.DataFrame) -> tuple[go.Figure, List[int], int]:
     """ Creates a timeline of killed neutral objectives over time. 
     Should receive the data for a single match, or aggregated data"""
     # Team column is killer team
@@ -375,11 +386,17 @@ def get_map_timeline_mplot(dfkills, dfmons, dfstruct, matchinfo):
 
     # create subplots
     fig = make_subplots(
-        rows=4, cols=1,
+        rows=4, cols=3,
         shared_xaxes=False,
         row_heights=row_h,
         vertical_spacing=0.1,
-        subplot_titles=("Map", "Kills Timeline", "Monsters Timeline", "Structures Timeline")
+        subplot_titles=("Map", "Kills Timeline", "Monsters Timeline", "Structures Timeline"),
+        specs=[
+            [{"colspan": 2}, None, None],                # map left, leave blank right for event list in dash
+            [{"colspan": 3}, None, None],  # timeline rows span 2 columns
+            [{"colspan": 3}, None, None], 
+            [{"colspan": 3}, None, None], 
+        ]
     )
 
     # Add figure 1 (map) to subplots
@@ -418,7 +435,6 @@ def get_map_timeline_mplot(dfkills, dfmons, dfstruct, matchinfo):
         tickvals=fig4_yvals,   # To put horizontal lines at level of icons
         row=4, **timeline_axes_common
     )
-
     fig.layout.images = fig3imgs+fig4imgs+[map_bg_img]  # Add images, monster, structure icons and map bg
     set_timeline_margins_scale(fig, x_size)
 
