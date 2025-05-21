@@ -1,7 +1,3 @@
-
-# TODO les callbacks vont appeler des fonctions qui vont ouptut le df avec des filtres, pas besoin d'avoir le df ici
-# TODO p-ê store les df filtrés dans des dcc.Store (unn dcc.Store par type de filtre?)
-# TODO => plutot tout filtrer sur match_infos (p-ê dans un dcc.Store) et ensuite faire une intersection avec les autres df
 import pandas as pd
 from typing import List, Dict, Any
 from os import path as pt
@@ -38,12 +34,15 @@ def get_metadata_df():
     prevent_initial_call=True
 )
 def store_metadata_df(filtered_rows):
+    if len(filtered_rows) == 0:
+        return no_update, no_update
     metadata_df = pd.DataFrame.from_dict(filtered_rows)
     return metadata_df.to_records(index=False), metadata_df.columns
 
 
 @callback(
     Output("filter_team_player_position", "rowData"),
+    Output("stored_match_ids", 'data'),
     Input("stored_metadata_filtered", 'data'),
     State("metadata_filtered_columns", 'data'),
     prevent_initial_call=True
@@ -52,10 +51,11 @@ def update_team_player_position(intermediate_records, cols):
     """
     Creates a new dataframe where each row contains a team, player and position
     """
+    if len(intermediate_records) == 0:
+        return no_update, no_update
     df = pd.DataFrame.from_records(intermediate_records, columns=cols)
     
-    added_players = set()
-    records = []
+    match_id_dict = dict()
     for index, row in df.iterrows():
         match_id = row['match_id']
 
@@ -68,154 +68,98 @@ def update_team_player_position(intermediate_records, cols):
         blue_adc = row['blueADC']
         blue_support = row['blueSupport']
 
-        if (blue_team, blue_top, "Top") not in added_players:
-            records.append((match_id, blue_team, blue_top, 'Top'))
-            added_players.add((blue_team, blue_top, "Top"))
-        if (blue_team, blue_jungle, "Jungle") not in added_players:
-            records.append((match_id, blue_team, blue_jungle, 'Jungle'))
-            added_players.add((blue_team, blue_jungle, "Jungle"))
-        if (blue_team, blue_middle, "Middle") not in added_players:
-            records.append((match_id, blue_team, blue_middle, 'Middle'))
-            added_players.add((blue_team, blue_middle, "Middle"))
-        if (blue_team, blue_adc, "ADC") not in added_players:
-            records.append((match_id, blue_team, blue_adc, 'ADC'))
-            added_players.add((blue_team, blue_adc, "ADC"))
-        if (blue_team, blue_support, "Support") not in added_players:
-            records.append((match_id, blue_team, blue_support, 'Support'))
-            added_players.add((blue_team, blue_support, "Support"))
+        if (blue_team, blue_top, "Top") not in match_id_dict:
+            match_id_dict[(blue_team, blue_top, "Top")] = {match_id}
+        else:
+            match_id_dict[(blue_team, blue_top, "Top")].add(match_id)
+        if (blue_team, blue_jungle, "Jungle") not in match_id_dict:
+            match_id_dict[(blue_team, blue_jungle, "Jungle")] = {match_id}
+        else:
+            match_id_dict[(blue_team, blue_jungle, "Jungle")].add(match_id)
+        if (blue_team, blue_middle, "Middle") not in match_id_dict:
+            match_id_dict[(blue_team, blue_middle, "Middle")] = {match_id}
+        else:
+            match_id_dict[(blue_team, blue_middle, "Middle")].add(match_id)
+        if (blue_team, blue_adc, "ADC") not in match_id_dict:
+            match_id_dict[(blue_team, blue_adc, "ADC")] = {match_id}
+        else:
+            match_id_dict[(blue_team, blue_adc, "ADC")].add(match_id)
+        if (blue_team, blue_support, "Support") not in match_id_dict:
+            match_id_dict[(blue_team, blue_support, "Support")] = {match_id}
+        else:
+            match_id_dict[(blue_team, blue_support, "Support")].add(match_id)
 
         red_top = row['redTop']
         red_jungle = row['redJungle']
         red_middle = row['redMiddle']
         red_adc = row['redADC']
         red_support = row['redSupport']
+        
+        if (red_team, red_top, "Top") not in match_id_dict:
+            match_id_dict[(red_team, red_top, "Top")] = {match_id}
+        else:
+            match_id_dict[(red_team, red_top, "Top")].add(match_id)
+        if (red_team, red_jungle, "Jungle") not in match_id_dict:
+            match_id_dict[(red_team, red_jungle, "Jungle")] = {match_id}
+        else:
+            match_id_dict[(red_team, red_jungle, "Jungle")].add(match_id)
+        if (red_team, red_middle, "Middle") not in match_id_dict:
+            match_id_dict[(red_team, red_middle, "Middle")] = {match_id}
+        else:
+            match_id_dict[(red_team, red_middle, "Middle")].add(match_id)
+        if (red_team, red_adc, "ADC") not in match_id_dict:
+            match_id_dict[(red_team, red_adc, "ADC")] = {match_id}
+        else:
+            match_id_dict[(red_team, red_adc, "ADC")].add(match_id)
+        if (red_team, red_support, "Support") not in match_id_dict:
+            match_id_dict[(red_team, red_support, "Support")] = {match_id}
+        else:
+            match_id_dict[(red_team, red_support, "Support")].add(match_id)
+        
+    records = list(match_id_dict.keys())
+    df = pd.DataFrame.from_records(records, columns=["Teams", "Players", "Position"])
 
-        if (red_team, red_top, "Top") not in added_players:
-            records.append((match_id, red_team, red_top, 'Top'))
-            added_players.add((red_team, red_top, "Top"))
-        if (red_team, red_jungle, "Jungle") not in added_players:
-            records.append((match_id, red_team, red_jungle, 'Jungle'))
-            added_players.add((red_team, red_jungle, "Jungle"))
-        if (red_team, red_middle, "Middle") not in added_players:
-            records.append((match_id, red_team, red_middle, 'Middle'))
-            added_players.add((red_team, red_middle, "Middle"))
-        if (red_team, red_adc, "ADC") not in added_players:
-            records.append((match_id, red_team, red_adc, 'ADC'))
-            added_players.add((red_team, red_adc, "ADC"))
-        if (red_team, red_support, "Support") not in added_players:
-            records.append((match_id, red_team, red_support, 'Support'))
-            added_players.add((red_team, red_support, "Support"))
-    
-    df = pd.DataFrame.from_records(records, columns=["match_id", "Teams", "Players", "Position"])
-    return df.to_dict("records")
+    match_id_list = []
+    for item in match_id_dict.items():
+        match_id_list.append((item[0], tuple(item[1])))
+    match_id_tuple = tuple(match_id_list)
 
-
-def update_team_player_position(intermediate_records, cols):
-    """
-    Creates a new dataframe where each row contains a team, player and position
-    """
-    df = pd.DataFrame.from_records(intermediate_records, columns=cols)
-    
-    records = dict()
-    for index, row in df.iterrows():
-        match_id = row['match_id']
-
-        blue_team = row['blueTeamTag']
-        red_team = row['redTeamTag']
-
-        blue_top = row['blueTop']
-        blue_jungle = row['blueJungle']
-        blue_middle = row['blueMiddle']
-        blue_adc = row['blueADC']
-        blue_support = row['blueSupport']
-
-        if (blue_team, blue_top, "Top") not in records:
-            records[(blue_team, blue_top, "Top")] = {match_id}
-        else:
-            records[(blue_team, blue_top, "Top")].add(match_id)
-        if (blue_team, blue_jungle, "Jungle") not in records:
-            records[(blue_team, blue_jungle, "Jungle")] = {match_id}
-        else:
-            records[(blue_team, blue_jungle, "Jungle")].add(match_id)
-        if (blue_team, blue_middle, "Middle") not in records:
-            records[(blue_team, blue_middle, "Middle")] = {match_id}
-        else:
-            records[(blue_team, blue_middle, "Middle")].add(match_id)
-        if (blue_team, blue_adc, "ADC") not in records:
-            records[(blue_team, blue_adc, "ADC")] = {match_id}
-        else:
-            records[(blue_team, blue_adc, "ADC")].add(match_id)
-        if (blue_team, blue_support, "Support") not in records:
-            records[(blue_team, blue_support, "Support")] = {match_id}
-        else:
-            records[(blue_team, blue_support, "Support")].add(match_id)
-
-        red_top = row['redTop']
-        red_jungle = row['redJungle']
-        red_middle = row['redMiddle']
-        red_adc = row['redADC']
-        red_support = row['redSupport']
-
-        if (red_team, red_top, "Top") not in records:
-            records[(red_team, red_top, "Top")] = {match_id}
-        else:
-            records[(red_team, red_top, "Top")].add(match_id)
-        if (red_team, red_jungle, "Jungle") not in records:
-            records[(red_team, red_jungle, "Jungle")] = {match_id}
-        else:
-            records[(red_team, red_jungle, "Jungle")].add(match_id)
-        if (red_team, red_middle, "Middle") not in records:
-            records[(red_team, red_middle, "Middle")] = {match_id}
-        else:
-            records[(red_team, red_middle, "Middle")].add(match_id)
-        if (red_team, red_adc, "ADC") not in records:
-            records[(red_team, red_adc, "ADC")] = {match_id}
-        else:
-            records[(red_team, red_adc, "ADC")].add(match_id)
-        if (red_team, red_support, "Support") not in records:
-            records[(red_team, red_support, "Support")] = {match_id}
-        else:
-            records[(red_team, red_support, "Support")].add(match_id)
-    
-    df = pd.DataFrame.from_records(records, columns=["match_id", "Teams", "Players", "Position"])
-    return df.to_dict("records")
+    return df.to_dict("records"), match_id_tuple
 
 
 @callback(
     Output("stored_team_player_position_filtered", 'data'),
     Output("team_player_position_filtered_columns", 'data'),
     Input("filter_team_player_position", "virtualRowData"),
-    Input("stored_metadata_filtered", 'data'),
+    State("stored_metadata_filtered", 'data'),
     State("metadata_filtered_columns", 'data'),
+    State("stored_match_ids", "data"),
     prevent_initial_call=True
 )
-def store_team_player_position_df(filtered_rows, intermediate_records, cols):
-    metadata_df = pd.DataFrame.from_records(intermediate_records, columns=cols)
-    team_player_position_df = pd.DataFrame.from_dict(filtered_rows)
-
-    if len(team_player_position_df.index) == 0:
-        return intermediate_records, cols
+def store_team_player_position_df(filtered_rows, intermediate_records, cols, match_id_list):
+    if len(filtered_rows) == 0:
+        return no_update, no_update
+    if len(intermediate_records) == 0:
+        return no_update, no_update
     
-    # match_ids = team_player_position_df["match_id"].unique()
-    # filtered_metadata_df = metadata_df[metadata_df['match_id'].isin(match_ids)]
-    # print(len(match_ids), len(filtered_metadata_df.index)) # TODO ne garde pas tous les match_ids, p-ê moyen de le faire fonctionner
+    team_player_position_df = pd.DataFrame.from_dict(filtered_rows)
+    metadata_df = pd.DataFrame.from_records(intermediate_records, columns=cols)
+    
+    match_id_dict = dict()
+    for item in match_id_list:
+        match_id_dict[tuple(item[0])] = tuple(item[1])
 
-    all_teams = team_player_position_df["Teams"].unique()
-    all_players = team_player_position_df["Players"].unique()
-    # all_positions = team_player_position_df["Position"].unique() # TODO le filtre sur les positions ne sert à rien, comment filtrer sur les positions dans le plots?
+    match_ids = [] # list of match_ids that appear in the filtered team_player_position_df
+    for index, row in team_player_position_df.iterrows():
+        key = (row['Teams'], row['Players'], row['Position'])
+        if key in match_id_dict:
+            match_ids.extend(match_id_dict[key])
+    match_ids = list(set(match_ids))
+    print("match_id" ,len(match_ids))
+    
+    filtered_metadata_df = metadata_df[metadata_df['match_id'].isin(match_ids)]
 
-    filtered_metadata_df = metadata_df[metadata_df["blueTeamTag"].isin(all_teams) | metadata_df["redTeamTag"].isin(all_teams)]
-    filtered_metadata_df = filtered_metadata_df[filtered_metadata_df["blueTop"].isin(all_players) |
-                                                filtered_metadata_df["blueJungle"].isin(all_players) |
-                                                filtered_metadata_df["blueMiddle"].isin(all_players) |
-                                                filtered_metadata_df["blueADC"].isin(all_players) |
-                                                filtered_metadata_df["blueSupport"].isin(all_players) |
-                                                filtered_metadata_df["redTop"].isin(all_players) |
-                                                filtered_metadata_df["redJungle"].isin(all_players) |
-                                                filtered_metadata_df["redMiddle"].isin(all_players) |
-                                                filtered_metadata_df["redADC"].isin(all_players) |
-                                                filtered_metadata_df["redSupport"].isin(all_players)]    
-
+    # all_positions = team_player_position_df["Position"].unique() # TODO le filtre sur les positions ne sert à rien, comment filtrer sur les positions dans le plots? 
     return filtered_metadata_df.to_records(index=False), filtered_metadata_df.columns
 
 @callback(
@@ -225,6 +169,8 @@ def store_team_player_position_df(filtered_rows, intermediate_records, cols):
     prevent_initial_call=True
 )
 def get_games(team_player_position_records, cols):
+    if len(team_player_position_records) == 0:
+        return no_update
     df = pd.DataFrame.from_records(team_player_position_records, columns=cols)
     # TODO rajouter le gold et le nombre de kills dans match_info pour faire comme ce que Loïc à envoyer
     # df = df[["match_id", "Year", "League", "Season", "Type", "bResult", "blueTeamTag", "redTeamTag", "rResult", "gamelength"]]
@@ -243,4 +189,4 @@ def store_filtered_match_info(games_rows):
         return df.to_records(index=False), df.columns
     else:
         # print("No games selected")
-        return [], []
+        return no_update, no_update

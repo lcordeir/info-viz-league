@@ -11,6 +11,7 @@ def filters_layout() -> List[html.Div]:
         filters_team_player_position(),
         dcc.Store(id='stored_team_player_position_filtered'),
         dcc.Store(id='team_player_position_filtered_columns'),
+        dcc.Store(id='stored_match_ids'),
         # filter_champions(),
         filter_games(),
         dcc.Store(id='stored_games_filtered'),
