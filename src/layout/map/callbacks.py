@@ -1,10 +1,11 @@
-from dash import Input, Output, callback, html
+from dash import Input, Output, State, callback, html
 import pandas as pd
 import plotly.graph_objects as go
 from os import path as pt
 import base64
 import os
 import json
+from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF, BANS_DF, GOLD_DF
 
 @callback(
     [
@@ -18,10 +19,15 @@ import json
         Input("team-filter", "value"),
         # Input("filtered_match_info", "data"),
         Input("filter_games", "selectedRows"),
+        Input("stored_games_filtered", "selectedRows"),
 
      ]
 )
-def update_map(time_range, map_style, team_filter, match_records):
+def update_map(time_range, map_style, team_filter, match_records, games):
+
+    print("===========")
+    print(games)
+    print("///////////")
 
     if map_style == "Schematic":
         map_image_path = "ressources/SummonersRift.webp"
@@ -39,27 +45,23 @@ def update_map(time_range, map_style, team_filter, match_records):
     match_ids = list(pd.DataFrame.from_records(match_records)["match_id"])
     # print(match_ids)
     # == Get filtered data
-    matchinfo = pd.read_csv(pt.join('data', 'matchinfo_mod.csv'), index_col=0)
-    filtered_matchinfo = matchinfo[matchinfo.index.isin(match_ids)]
+    filtered_matchinfo = MATCHINFO_DF[MATCHINFO_DF.index.isin(match_ids)]
     
-    kills = pd.read_csv(pt.join('data', 'kills_mod.csv'))
-    kills = kills[kills["match_id"].isin(match_ids)]
+    kills = KILLS_DF[KILLS_DF["match_id"].isin(match_ids)]
     kills = kills[
         (kills["Time"] >= time_range[0]) &
         (kills["Time"] <= time_range[1]) &
         (kills["Team"].isin(team_filter))
     ]
 
-    structures =  pd.read_csv(pt.join('data', 'structures_mod.csv'))
-    structures = structures[structures["match_id"].isin(match_ids)]
+    structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
     structures = structures[
         (structures["Time"] >= time_range[0]) &
         (structures["Time"] <= time_range[1]) &
         (structures["Team"].isin(team_filter))
     ]
 
-    monsters =  pd.read_csv(pt.join('data', 'monsters_mod.csv'))
-    monsters = monsters[monsters["match_id"].isin(match_ids)]
+    monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
     monsters = monsters[
         (monsters["Time"] >= time_range[0]) &
         (monsters["Time"] <= time_range[1]) &
