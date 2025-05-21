@@ -12,13 +12,15 @@ marks = {i: minutes_to_label(i) for i in range(0, 61)}  # 0 to 60 minutes
 
 def map_layout() -> list:
     return [
-        # MAP
         html.Div([
-            dcc.Graph(id="map-graph", style={"flex": "2"}),
-            html.Div(id="kill-list", style={
+            # MAP
+            dcc.Graph(id="map-graph", style={"flex": "2", "height": "600px"}),
+
+            # EVENT LIST
+            html.Div(id="event-list", style={
                 "flex": "1", "overflowY": "auto", "maxHeight": "600px"
             }),
-        ], style={"display": "flex", "gap": "20px"}),
+        ], style={"display": "flex", "gap": "20px",  "alignItems": "stretch"}),
     
 
         html.Div([

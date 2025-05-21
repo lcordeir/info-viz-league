@@ -37,7 +37,7 @@ def filter_data(df, kill_time_range, team_filter):
 
 @callback(
     [Output("map-graph", "figure"),
-     Output("kill-list", "children"),
+     Output("event-list", "children"),
      Output("timeline-fig", "figure"),
      Output("kill-podium", "figure"),
      Output("assist-podium", "figure")

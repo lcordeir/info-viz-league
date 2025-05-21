@@ -11,7 +11,7 @@ from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF,
     [
         Output("map-graph", "figure"),
         Output("timeline-fig", "figure"),
-        Output("kill-list", "children"),
+        Output("event-list", "children"),
      ],
     [
         Input("time-slider", "value"),
@@ -19,15 +19,16 @@ from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF,
         Input("team-filter", "value"),
         # Input("filtered_match_info", "data"),
         Input("filter_games", "selectedRows"),
-        Input("stored_games_filtered", "selectedRows"),
+        # Input("stored_games_filtered", "selectedRows"),
 
      ]
 )
-def update_map(time_range, map_style, team_filter, match_records, games):
+def update_map(time_range, map_style, team_filter, match_records):
+# def update_map(time_range, map_style, team_filter, match_records, games):
 
-    print("===========")
-    print(games)
-    print("///////////")
+    # print("===========")
+    # print(games)
+    # print("///////////")
 
     if map_style == "Schematic":
         map_image_path = "ressources/SummonersRift.webp"
@@ -268,101 +269,6 @@ def generate_kills_map(kills, image_path):
 
 
     return fig
-
-# def generate_empty_map():
-#     image_path = "ressources/SummonersRift.webp"
-#     # Import image (for some reason, directly putting the path does not load the image)
-#     # image_path = "ressources/SummonersRift.webp"
-#     encoded_image = base64.b64encode(open(image_path, 'rb').read()).decode()
-
-#     fig = go.Figure()
-#     fig.add_layout_image(
-#             dict(
-#                 # source="ressources/SummonersRift.webp",
-#                 source="data:image/webp;base64," + encoded_image,
-#                 x=0,
-#                 y=16000,
-#                 xref="x",
-#                 yref="y",
-#                 sizex=16000,
-#                 sizey=16000,
-#                 opacity=0.5,
-#                 layer="below"
-#         )
-#     )
-
-#     for _, kill in kills.iterrows():
-#         # print(f"X: {kill['x_pos']}")
-#         # print(f"Y: {kill['y_pos']}")
-#         fig.add_trace(go.Scatter(
-#             x=[kill["x_pos"]],
-#             y=[kill["y_pos"]],
-#             mode="markers",
-#             marker=dict(
-#                 size=10,
-#                 color="blue" if kill["Team"] == "BLUE" else "red",
-#                 symbol="x"
-#             ),
-#             name=f"{kill['Killer']} killed {kill['Victim']}",
-#             text=f"Time: {kill['Time']}s\nKiller: {kill['Killer']}\nVictim: {kill['Victim']}",
-#             hoverinfo="text"
-#         ))
-
-#     fig.update_layout(
-#         xaxis=dict(
-#             range=[0, 16000],
-#             constrain='domain',     # Keep aspect ratio when resizing
-#             showgrid=False,
-#             zeroline=False,
-#             scaleanchor="y",
-#             scaleratio=1
-#         ),
-#         yaxis=dict(
-#             range=[0, 16000],
-#             constrain='domain',     # Keep aspect ratio when resizing
-#             showgrid=False,
-#             zeroline=False
-#         ),
-#         title="League of Legends Kill Map",
-#         showlegend=False,
-#         plot_bgcolor="rgba(0,0,0,0)",
-#         width=650,
-#         height=650,
-#         dragmode="zoom",            # Enable zoom and pan
-#     )
-
-#     fig.update_layout(
-#         updatemenus=[dict(
-#             type="buttons",
-#             showactive=False,
-#             buttons=[dict(
-#                 label="Reset View",
-#                 method="relayout",
-#                 args=[
-#                     {
-#                         "xaxis.range[0]": 0,
-#                         "xaxis.range[1]": 16000,
-#                         "yaxis.range[0]": 0,
-#                         "yaxis.range[1]": 16000,
-#                         # Include a dummy toggle to force rerender
-#                         "uirevision": True
-#                     }
-#                 ]
-#             )],
-#             x=0.01,
-#             y=0.99,
-#             xanchor="left",
-#             yanchor="top"
-#         )]
-#     )
-
-
-#     fig.update_layout(
-#         modebar_remove=["autoscale"],  # Remove default autoscale button
-#     )
-
-
-#     return fig
 
 def generate_kill_timeline(kills_df):
     # Group by time (rounded or binned if needed)

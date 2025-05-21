@@ -13,7 +13,7 @@ import os, math
 
 from utils import format_time, encode_image_to_base64
 
-MAPICONS_PATH = os.path.join("ressources","mapicons")
+MAPICONS_PATH = os.path.join("ressources","MAPICONS")
 
 # === MAP ===
 
@@ -348,7 +348,7 @@ def get_kills_timeline(df: pd.DataFrame) -> go.Figure:
         team_name_col=[("Red Side", "red"), ("Blue Side", "blue")]
     return create_kills_timeline(df_g, team_name_col, hover_labels)
 
-def get_map_timeline_mplot(dfkills, dfmons, dfstruct):
+def get_map_timeline_mplot(dfkills, dfmons, dfstruct, matchinfo):
     """Creates subplots for map and timelines"""
     # TODO: get timeframe filter and apply
     # time_filtered_kills = filtered_kills.applytimefilter

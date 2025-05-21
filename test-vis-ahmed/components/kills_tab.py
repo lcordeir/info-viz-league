@@ -16,7 +16,7 @@ def kills_tab_layout():
     return html.Div([
         html.Div([
             dcc.Graph(id="map-graph", style={"flex": "2"}),
-            html.Div(id="kill-list", style={
+            html.Div(id="event-list", style={
                 "flex": "1", "overflowY": "auto", "maxHeight": "600px"
             }),
         ], style={"display": "flex", "gap": "20px"}),
