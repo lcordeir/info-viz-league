@@ -6,16 +6,19 @@ from layout.filters.filtering import get_unique_values
 def filters_layout() -> List: 
     return [
         filters_metadata(),
-        dcc.Store(id='stored_intermediate_match_info'),
-        dcc.Store(id='match_info_columns'),
+        dcc.Store(id='stored_metadata_filtered'),
+        dcc.Store(id='metadata_filtered_columns'),
         filters_team_player_position(),
+        dcc.Store(id='stored_team_player_position_filtered'),
+        dcc.Store(id='team_player_position_filtered_columns'),
         # filter_champions(),
         filter_games(),
-        dcc.Store(id='stored_filtetered_match_info'),
+        dcc.Store(id='stored_games_filtered'),
+        dcc.Store(id='games_filtered_columns'),
         html.Button('Reset all filters', id='filters_all_reset', n_clicks=0, style={'margin': '10px'}),
     ]
 
-def filters_metadata() -> html.Div:
+def filters_metadata() -> html.Div: # TODO changer les checbox en ag grid pour toujours simplement filtrer sur les match_id
     unique_years = sorted(get_unique_values('Year'))
     unique_seasons = get_unique_values('Season')
     unique_leagues = get_unique_values('League')
@@ -141,10 +144,6 @@ def filter_games() -> html.Div:
     ]
 
     defaultColDef = {"flex": 1, "filter": True}
-    defaultColDef = {
-        "flex": 1,
-        "filter": True,
-    }
 
     grid = dag.AgGrid(
         enableEnterpriseModules=True,
