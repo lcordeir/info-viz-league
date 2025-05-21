@@ -13,29 +13,33 @@ marks = {i: minutes_to_label(i) for i in range(0, 61)}  # 0 to 60 minutes
 def map_layout() -> list:
     return [
         html.Div([
-            # MAP
-            dcc.Graph(id="map-graph", style={"flex": "2", "height": "600px"}),
+            # Container with relative positioning
+            html.Div([
+                # Full-size map graph
+                dcc.Graph(id="map-graph", style={
+                    "height": "100vh",
+                    "width": "100%",
+                }),
 
-            # EVENT LIST
-            html.Div(id="event-list", style={
-                "flex": "1", "overflowY": "auto", "maxHeight": "600px"
-            }),
-        ], style={"display": "flex", "gap": "20px",  "alignItems": "stretch"}),
+                # Overlaid event list
+                html.Div(id="event-list", style={
+                    "position": "absolute",
+                    "top": "20px",  # padding from top
+                    "right": "20px",  # padding from right
+                    "height": "50vh",
+                    "width": "10vw",  # or adjust as needed
+                    "overflowY": "auto",
+                    "backgroundColor": "rgba(255, 255, 255, 0.9)",  # semi-transparent
+                    "border": "1px solid #ccc",
+                    "padding": "10px",
+                    "zIndex": 10,  # ensure it's above the graph
+                    "borderRadius": "8px"
+                }),
+            ], style={"position": "relative"}),
+        ]),
     
-
         html.Div([
             html.Div([
-
-                # TIMELINE
-                dcc.Graph(
-                    id="timeline-fig",
-                    config={"displayModeBar": False},
-                    style={
-                        "height": "100px",  # Set the height of the timeline graph to make it visually appropriate
-                        "marginTop": "10px",  # Add margin to the top for spacing
-                        "padding": "0 1%"  # Add padding to the left and right sides
-                    }
-                ),
 
                 # SLIDER
                 dcc.RangeSlider(
@@ -46,10 +50,6 @@ def map_layout() -> list:
                 ),
             ], style={}),
                 
-                # Team filter
-                dcc.Checklist(id="team-filter",
-                    options=[{"label": "Blue", "value": "BLUE"}, {"label": "Red", "value": "RED"}],
-                    value=["BLUE", "RED"], inline=True),
                 # MAP STYLE RADIO
                 dcc.RadioItems(id="map-style",
                             options=[{"label": "Heatmap", "value": "Heatmap"},
@@ -57,4 +57,5 @@ def map_layout() -> list:
                                         {"label": "Schematic", "value": "Schematic"}],
                             value="Schematic", inline=True)
             ], style={"padding": "0 10px"}),
+
     ]
