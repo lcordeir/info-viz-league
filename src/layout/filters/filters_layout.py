@@ -1,9 +1,9 @@
 from dash import html, dcc
 import dash_ag_grid as dag
 from typing import List
-from layout.filters.filtering import get_unique_values
+from layout.filters.callbacks import get_metadata_df
 
-def filters_layout() -> List: 
+def filters_layout() -> List[html.Div]: 
     return [
         filters_metadata(),
         dcc.Store(id='stored_metadata_filtered'),
@@ -19,29 +19,47 @@ def filters_layout() -> List:
     ]
 
 def filters_metadata() -> html.Div: # TODO changer les checbox en ag grid pour toujours simplement filtrer sur les match_id
-    unique_years = sorted(get_unique_values('Year'))
-    unique_seasons = get_unique_values('Season')
-    unique_leagues = get_unique_values('League')
-    unique_types = get_unique_values('Type')
+    columnDefs = [
+        {
+            "headerName": "Year",
+            "field": "Year",
+            "filter": "agSetColumnFilter",
+        },
+        {
+            "headerName": "Season",
+            "field": "Season",
+            "filter": "agSetColumnFilter",
+        },
+        {
+            "headerName": "League",
+            "field": "League",
+            "filter": "agSetColumnFilter",
+        },
+        {
+            "headerName": "Type",
+            "field": "Type",
+            "filter": "agSetColumnFilter",
+        },
+    ]
+
+    defaultColDef = {"flex": 1, "filter": True}
+
+    grid = dag.AgGrid(
+        enableEnterpriseModules=True,
+        id="filter_metadata",
+        rowData=get_metadata_df(),
+        columnDefs=columnDefs,
+        defaultColDef=defaultColDef,
+        dashGridOptions={"sideBar": "filters", "suppressRowClickSelection": True, "animateRows": False},
+        style={"height": 300}, # TODO changer la taille des rows pour qu'elles soient plus fines
+    )
 
     return \
         html.Div([
             html.Details([
                 html.Summary(html.B('Choose data to analyse')),
-                html.Table([
-                    # TODO changer tous les radioitems pour recevoir les options et value depuis un callback
-                    html.Tr([
-                        html.Td([html.B("Year"), dcc.Checklist(unique_years, unique_years, id='filter_year', inline=True)]),
-                        html.Td([html.B("Season"), dcc.Checklist(unique_seasons, unique_seasons, id='filter_season', inline=True)])
-                    ]),
-                    html.Tr([
-                        html.Td([html.B("League"), dcc.Checklist(unique_leagues, unique_leagues, id='filter_league', inline=True)]),
-                        html.Td([html.B("Type"), dcc.Checklist(unique_types, unique_types, id='filter_type', inline=True)])
-                    ])
-                ], style = {'width': '100%',
-                            'textAlign': 'left', 
-                }),
-                html.Button('Reset filters', id='filters_metadata_reset', n_clicks=0, style={'margin': '10px'}),
+                grid,
+                # html.Button('Reset filters', id='filters_metadata_reset', n_clicks=0, style={'margin': '10px'}),
             ], open=True),
         ])
 

@@ -8,38 +8,38 @@ from os import path as pt
 from dash import Dash, html, dcc, dash_table, Input, Output, State, callback, no_update
 import plotly.express as px
 
-@callback(
-    Output('filter_year', 'value'),
-    Output('filter_season', 'value'),
-    Output('filter_league', 'value'),
-    Output('filter_type', 'value'),
-    Input('filters_metadata_reset', "n_clicks"),
-    State('filter_year', 'options'),
-    State('filter_season', 'options'),
-    State('filter_league', 'options'),
-    State('filter_type', 'options'),
-    prevent_initial_call=True
-)
-def reset_metadata_filters(n_clicks, filter_year_options, filter_season_options, filter_league_options, filter_type_options):
-    return filter_year_options, filter_season_options, filter_league_options, filter_type_options
+# @callback(
+#     Output('filter_year', 'value'),
+#     Output('filter_season', 'value'),
+#     Output('filter_league', 'value'),
+#     Output('filter_type', 'value'),
+#     Input('filters_metadata_reset', "n_clicks"),
+#     State('filter_year', 'options'),
+#     State('filter_season', 'options'),
+#     State('filter_league', 'options'),
+#     State('filter_type', 'options'),
+#     prevent_initial_call=True
+# )
+# def reset_metadata_filters(n_clicks, filter_year_options, filter_season_options, filter_league_options, filter_type_options):
+#     return filter_year_options, filter_season_options, filter_league_options, filter_type_options
+
+def get_metadata_df():
+    """
+    Returns the match_info dataframe
+    """
+    df = pd.read_csv(pt.join("data","matchinfo_mod.csv"))
+    return df.to_dict("records")
+
 
 @callback(
     Output("stored_metadata_filtered", 'data'),
     Output("metadata_filtered_columns", 'data'),
-    Input('filter_year', 'value'),
-    Input('filter_season', 'value'),
-    Input('filter_league', 'value'),
-    Input('filter_type', 'value'),
+    Input("filter_metadata", "virtualRowData"),
+    prevent_initial_call=True
 )
-def store_metadata_df(filter_year, filter_season, filter_league, filter_type):
-    df = pd.read_csv(pt.join("data","matchinfo_mod.csv"))
-
-    df = df[df['Season'].isin(filter_season)]
-    df = df[df['Year'].isin(filter_year)]
-    df = df[df['League'].isin(filter_league)]
-    df = df[df['Type'].isin(filter_type)]
-
-    return df.to_records(index=False), df.columns
+def store_metadata_df(filtered_rows):
+    metadata_df = pd.DataFrame.from_dict(filtered_rows)
+    return metadata_df.to_records(index=False), metadata_df.columns
 
 
 @callback(
@@ -108,7 +108,78 @@ def update_team_player_position(intermediate_records, cols):
     
     df = pd.DataFrame.from_records(records, columns=["match_id", "Teams", "Players", "Position"])
     return df.to_dict("records")
+
+
+def update_team_player_position(intermediate_records, cols):
+    """
+    Creates a new dataframe where each row contains a team, player and position
+    """
+    df = pd.DataFrame.from_records(intermediate_records, columns=cols)
     
+    records = dict()
+    for index, row in df.iterrows():
+        match_id = row['match_id']
+
+        blue_team = row['blueTeamTag']
+        red_team = row['redTeamTag']
+
+        blue_top = row['blueTop']
+        blue_jungle = row['blueJungle']
+        blue_middle = row['blueMiddle']
+        blue_adc = row['blueADC']
+        blue_support = row['blueSupport']
+
+        if (blue_team, blue_top, "Top") not in records:
+            records[(blue_team, blue_top, "Top")] = {match_id}
+        else:
+            records[(blue_team, blue_top, "Top")].add(match_id)
+        if (blue_team, blue_jungle, "Jungle") not in records:
+            records[(blue_team, blue_jungle, "Jungle")] = {match_id}
+        else:
+            records[(blue_team, blue_jungle, "Jungle")].add(match_id)
+        if (blue_team, blue_middle, "Middle") not in records:
+            records[(blue_team, blue_middle, "Middle")] = {match_id}
+        else:
+            records[(blue_team, blue_middle, "Middle")].add(match_id)
+        if (blue_team, blue_adc, "ADC") not in records:
+            records[(blue_team, blue_adc, "ADC")] = {match_id}
+        else:
+            records[(blue_team, blue_adc, "ADC")].add(match_id)
+        if (blue_team, blue_support, "Support") not in records:
+            records[(blue_team, blue_support, "Support")] = {match_id}
+        else:
+            records[(blue_team, blue_support, "Support")].add(match_id)
+
+        red_top = row['redTop']
+        red_jungle = row['redJungle']
+        red_middle = row['redMiddle']
+        red_adc = row['redADC']
+        red_support = row['redSupport']
+
+        if (red_team, red_top, "Top") not in records:
+            records[(red_team, red_top, "Top")] = {match_id}
+        else:
+            records[(red_team, red_top, "Top")].add(match_id)
+        if (red_team, red_jungle, "Jungle") not in records:
+            records[(red_team, red_jungle, "Jungle")] = {match_id}
+        else:
+            records[(red_team, red_jungle, "Jungle")].add(match_id)
+        if (red_team, red_middle, "Middle") not in records:
+            records[(red_team, red_middle, "Middle")] = {match_id}
+        else:
+            records[(red_team, red_middle, "Middle")].add(match_id)
+        if (red_team, red_adc, "ADC") not in records:
+            records[(red_team, red_adc, "ADC")] = {match_id}
+        else:
+            records[(red_team, red_adc, "ADC")].add(match_id)
+        if (red_team, red_support, "Support") not in records:
+            records[(red_team, red_support, "Support")] = {match_id}
+        else:
+            records[(red_team, red_support, "Support")].add(match_id)
+    
+    df = pd.DataFrame.from_records(records, columns=["match_id", "Teams", "Players", "Position"])
+    return df.to_dict("records")
+
 
 @callback(
     Output("stored_team_player_position_filtered", 'data'),
@@ -166,6 +237,7 @@ def get_games(team_player_position_records, cols):
     prevent_initial_call=True
 )
 def store_filtered_match_info(games_rows):
+    print(len(games_rows))
     if len(games_rows) > 0:
         df = pd.DataFrame.from_dict(games_rows)
         return df.to_records(index=False), df.columns
