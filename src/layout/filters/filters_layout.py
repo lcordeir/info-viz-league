@@ -60,7 +60,7 @@ def filters_metadata() -> html.Div: # TODO changer les checbox en ag grid pour t
             html.Details([
                 html.Summary(html.B('Choose data to analyse')),
                 grid,
-                # html.Button('Reset filters', id='filters_metadata_reset', n_clicks=0, style={'margin': '10px'}),
+                html.Button('Reset filters', id='filters_metadata_reset', n_clicks=0, style={'margin': '10px'}),
             ], open=True),
         ])
 
@@ -100,7 +100,8 @@ def filters_team_player_position() -> html.Div:
         html.Div([
             html.Details([
                 html.Summary('Filter by Teams, Players and Positions'),
-                grid
+                grid,
+                html.Button('Reset filters', id='filters_team_player_position_reset', n_clicks=0, style={'margin': '10px'}),
             ], open=False),
         ])
 
@@ -178,6 +179,7 @@ def filter_games() -> html.Div:
         html.Div([
             html.Details([
                 html.Summary('Filter by games'),
-                grid
+                grid,
+                html.Button('Reset filters', id='filters_games_reset', n_clicks=0, style={'margin': '10px'}),
             ], open=True),
         ])

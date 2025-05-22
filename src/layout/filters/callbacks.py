@@ -4,20 +4,43 @@ from os import path as pt
 from dash import Dash, html, dcc, dash_table, Input, Output, State, callback, no_update
 import plotly.express as px
 
-# @callback(
-#     Output('filter_year', 'value'),
-#     Output('filter_season', 'value'),
-#     Output('filter_league', 'value'),
-#     Output('filter_type', 'value'),
-#     Input('filters_metadata_reset', "n_clicks"),
-#     State('filter_year', 'options'),
-#     State('filter_season', 'options'),
-#     State('filter_league', 'options'),
-#     State('filter_type', 'options'),
-#     prevent_initial_call=True
-# )
-# def reset_metadata_filters(n_clicks, filter_year_options, filter_season_options, filter_league_options, filter_type_options):
-#     return filter_year_options, filter_season_options, filter_league_options, filter_type_options
+@callback(
+    Output('filters_metadata_reset', 'n_clicks'),
+    Output('filters_team_player_position_reset', 'n_clicks'),
+    Output('filters_games_reset', 'n_clicks'),
+    Input('filters_all_reset', "n_clicks"),
+    prevent_initial_call=True
+)
+def reset_all_filters(n_clicks):
+    return 1, 1, 1
+
+@callback(
+    Output('filter_metadata', 'filterModel'),
+    Input('filters_metadata_reset', "n_clicks"),
+    State('filter_metadata', 'filterModel'),
+    prevent_initial_call=True
+)
+def reset_metadata_filters(n_clicks, filter_metadata):
+    return {}
+
+@callback(
+    Output('filter_team_player_position', 'filterModel'),
+    Input('filters_team_player_position_reset', "n_clicks"),
+    State('filter_team_player_position', 'filterModel'),
+    prevent_initial_call=True
+)
+def reset_metadata_filters(n_clicks, filter_team_player_position):
+    return {}
+
+@callback(
+    Output('filter_games', 'deselectAll'),
+    Input('filters_games_reset', "n_clicks"),
+    State('filter_games', 'deselectAll'),
+    prevent_initial_call=True
+)
+def reset_metadata_filters(n_clicks, filter_games):
+    return True
+
 
 def get_metadata_df():
     """
@@ -155,7 +178,6 @@ def store_team_player_position_df(filtered_rows, intermediate_records, cols, mat
         if key in match_id_dict:
             match_ids.extend(match_id_dict[key])
     match_ids = list(set(match_ids))
-    print("match_id" ,len(match_ids))
     
     filtered_metadata_df = metadata_df[metadata_df['match_id'].isin(match_ids)]
 
@@ -183,7 +205,6 @@ def get_games(team_player_position_records, cols):
     prevent_initial_call=True
 )
 def store_filtered_match_info(games_rows):
-    print(len(games_rows))
     if len(games_rows) > 0:
         df = pd.DataFrame.from_dict(games_rows)
         return df.to_records(index=False), df.columns
