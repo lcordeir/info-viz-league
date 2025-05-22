@@ -131,10 +131,12 @@ structures.loc[nexus_mask, 'Lane'] = np.where(
 # Champ IDs
 ## All capitalize
 champ_ids['NAME'] = champ_ids['NAME'].str.capitalize()
+champ_ids.loc[champ_ids["NAME"]=="Nunu&willump","NAME"] = "Nunu"
+champ_ids.loc[champ_ids["NAME"]=="Dr.mundo","NAME"] = "Drmundo"
 
 
 def reduce_dataset(df, ids):
-    return df.loc[df["match_id"].loc[ids]]
+    return df[df["match_id"].isin(ids)]
 
 if REDUCE:
     print("Reducing datasets")
@@ -142,15 +144,15 @@ if REDUCE:
     r_matchids = r_matchinfo["match_id"]
     r_kills = reduce_dataset(kills, r_matchids)
     r_struct = reduce_dataset(structures, r_matchids)
-    r_mosters = reduce_dataset(monsters, r_matchids)
+    r_monsters = reduce_dataset(monsters, r_matchids)
     r_gold = reduce_dataset(gold, r_matchids)
 
     print("Saving modified csvs")
-    r_gold.to_csv(pt.join("data","gold_mod.csv"))
-    r_kills.to_csv(pt.join("data","kills_mod.csv"))
-    r_matchinfo.to_csv(pt.join("data","matchinfo_mod.csv"))
-    r_mosters.to_csv(pt.join("data","monsters_mod.csv"))
-    r_struct.to_csv(pt.join("data","structures_mod.csv"))
+    r_gold.to_csv(pt.join("data","gold_mod_r.csv"))
+    r_kills.to_csv(pt.join("data","kills_mod_r.csv"))
+    r_matchinfo.to_csv(pt.join("data","matchinfo_mod_r.csv"))
+    r_monsters.to_csv(pt.join("data","monsters_mod_r.csv"))
+    r_struct.to_csv(pt.join("data","structures_mod_r.csv"))
 
 else:
     # Save csvs
@@ -160,4 +162,4 @@ else:
     matchinfo.to_csv(pt.join("data","matchinfo_mod.csv"))
     monsters.to_csv(pt.join("data","monsters_mod.csv"))
     structures.to_csv(pt.join("data","structures_mod.csv"))
-champ_ids.to_csv(pt.join("data","champ_ids.csv"),index=False)
+champ_ids.to_csv(pt.join("data","champ_ids_mod.csv"),index=False)

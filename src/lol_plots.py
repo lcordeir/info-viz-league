@@ -9,11 +9,11 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 
 from typing import Optional, List
-import os, math
+import os
 
-from utils import format_time, encode_image_to_base64, generate_shades_plotly
+from utils import *
 
-MAPICONS_PATH = os.path.join("ressources","mapicons")
+MAPICONS_PATH = resource_path(os.path.join("ressources","mapicons"))
 CHAMP_ICONS_LINK = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/" # Append champion id
 
 # === General Plots ==

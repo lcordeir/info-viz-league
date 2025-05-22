@@ -9,9 +9,9 @@ from plotly.subplots import make_subplots
 from typing import Optional, List
 import os, math
 
-from utils import format_time, encode_image_to_base64
+from utils import format_time, encode_image_to_base64, resource_path
 
-MAPICONS_PATH = os.path.join("ressources","mapicons")
+MAPICONS_PATH = resource_path(os.path.join("ressources","mapicons"))
 
 # ===========
 # === MAP ===
@@ -20,7 +20,7 @@ MAPICONS_PATH = os.path.join("ressources","mapicons")
 def add_map_bg(fig: go.Figure) -> go.Figure:
     """Modifies a figure to add the map as a background to it."""
     fig.update_traces(opacity=0.66)
-    img_path = os.path.join("ressources","SummonersRift.webp")
+    img_path = resource_path(os.path.join("ressources","SummonersRift.webp"))
     fig.update_layout(
         images=[
             dict(
@@ -40,7 +40,7 @@ def add_map_bg(fig: go.Figure) -> go.Figure:
 
 def get_map_bg(xref: str="paper", yref: str="paper", size: int=1) -> dict:
     """Creates a dict containing the information relating to the map background to add on the map"""
-    img_path = os.path.join("ressources","SummonersRift.webp")
+    img_path = resource_path(os.path.join("ressources","SummonersRift.webp"))
     return dict(
         source=encode_image_to_base64(img_path),  # Path or URL to the PNG/SVG image
         xref=xref,  # Coordinates system: 'paper' means relative to the paper's area
