@@ -1,6 +1,8 @@
 from dash import Input, Output, callback, html
 import pandas as pd
 from os import path as pt
+import plotly.graph_objects as go
+
 
 from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF
 from map_plots import get_map_timeline_mplot
@@ -20,6 +22,8 @@ from map_plots import get_map_timeline_mplot
 )
 def update_map(time_range, map_style,match_records, storedg):
 
+    if match_records == None:
+        return go.Figure(), html.Div()
 
     heatmap = map_style == "Heatmap"
 

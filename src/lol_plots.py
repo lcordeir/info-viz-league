@@ -132,8 +132,10 @@ def get_2teams_winrate(blue_team: str, red_team: str, row: pd.DataFrame, scores:
     red_pct = red_score / total * 100
 
     # Determine winner
-    if row['bResult'].values[0] > row['rResult'].values[0]: winner = blue_team  
-    else: red_team
+    if row['bResult'].values[0] > row['rResult'].values[0]: 
+        winner = blue_team  
+    else: 
+        winner = red_team
 
     # Define colors
     team_colors = {
@@ -176,3 +178,90 @@ def get_2teams_winrate(blue_team: str, red_team: str, row: pd.DataFrame, scores:
         yaxis_range=[0, 100],
     )
     return fig
+
+
+# Top 3 plots
+def podium_figure(series, title):
+    n = len(series)
+    if n == 0:
+        fig = go.Figure()
+        fig.update_layout(
+            title=title,
+            xaxis=dict(showticklabels=False),
+            yaxis=dict(showticklabels=False),
+            showlegend=False,
+            plot_bgcolor="white",
+            hovermode=False,
+            dragmode=False,
+            annotations=[
+                dict(
+                    text="Not enough data",
+                    x=0.5, y=0.5,
+                    xref="paper", yref="paper",
+                    showarrow=False,
+                    font=dict(size=24)
+                )
+            ]
+        )
+        return fig
+
+    # Podium positions: left = #2, center = #1, right = #3
+    positions = [1, 0, 2]  # Indexes in value_counts()
+    labels = ["#2", "#1", "#3"]
+    colors = ["silver", "gold", "#cd7f32"]
+    heights = [13, 20, 8]
+
+    data = []
+    for pos, label, color, height in zip(positions, labels, colors, heights):
+        if pos < n:
+            data.append({
+                "label": label,
+                "name": series.index[pos],
+                "color": color,
+                "height": height
+            })
+
+    fig = go.Figure()
+    fig.add_trace(go.Bar(
+        x=[d["label"] for d in data],
+        y=[d["height"] for d in data],
+        text=[d["name"] for d in data],
+        textfont=dict(size=20),
+        textposition="inside",
+        marker_color=[d["color"] for d in data],
+        width=[1] * len(data)
+    ))
+
+    fig.update_layout(
+        title=title,
+        xaxis=dict(
+            showticklabels=True,
+            tickfont=dict(size=32)
+        ),
+        yaxis=dict(showticklabels=False),
+        showlegend=False,
+        bargap=0.5,
+        plot_bgcolor="white",
+        hovermode=False,
+        dragmode=False
+    )
+    fig.update_traces(hoverinfo="skip")
+
+    return fig
+
+
+def get_top_killers(kills_df):
+    top_kills = kills_df["Killer"].value_counts().nlargest(3)
+    return podium_figure(top_kills, "Top 3 Killers")
+
+
+def get_top_assisters(kills_df):
+    assist_cols = [col for col in kills_df.columns if col.startswith("Assist_")]
+    top_assists = kills_df[assist_cols].stack().value_counts().nlargest(3)
+    return podium_figure(top_assists, "Top 3 Assisters")
+
+
+def get_top_deaths(kills_df):
+    top_deaths = kills_df["Victim"].value_counts().nlargest(3)
+    return podium_figure(top_deaths, "Top 3 Deaths")
+

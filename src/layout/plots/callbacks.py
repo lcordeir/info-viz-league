@@ -13,6 +13,9 @@ from lol_plots import *
         Output("winrate-plot", "figure"),
         Output("objective-plot", "figure"),
         Output("first-drake-plot", "figure"),
+        Output("top-kills-plot", "figure"),
+        Output("top-deaths-plot", "figure"),
+
          ],
     [
         # Input("filtered_match_info", "data"),
@@ -25,7 +28,7 @@ from lol_plots import *
 def update_plots(match_records):
     if match_records is None or len(match_records) == 0:
         print("no games selected")    
-        return (go.Figure(), ) * 8
+        return (go.Figure(), ) * 5
     
 
     match_ids = list(pd.DataFrame.from_records(match_records)["match_id"])
@@ -55,4 +58,6 @@ def update_plots(match_records):
     return (wr_fig,
             get_objective_distribution(monsters), 
             get_first_Drake_avg(monsters), 
+            get_top_killers(kills),
+            get_top_deaths(kills),
             )
