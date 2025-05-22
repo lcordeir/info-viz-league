@@ -403,7 +403,7 @@ def get_champ_rates_plots(pick_df: pd.DataFrame, win_df: pd.DataFrame, ban_df: p
 
     # Create single bar traces
     pick_trace = create_champ_rate_trace(pick_df, colour="#004ac0")
-    win_trace = create_champ_rate_trace(win_df, colour="#009e00")
+    win_trace = create_champ_rate_trace(win_df, colour="#ffff00")
     ban_trace = create_champ_rate_trace(ban_df, colour="#ff0000", ban=True)
 
     # Add traces to subplots
