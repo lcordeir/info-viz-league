@@ -24,36 +24,16 @@ from lol_plots import get_map_timeline_mplot
 def update_map(time_range, map_style,match_records, storedg):
 
 
-    if map_style == "Schematic":
-        map_image_path = "ressources/SummonersRift.webp"
-    elif map_style == "Satellite":
-        map_image_path = "ressources/satellite.jpeg"
-    else:
-        map_image_path = "ressources/SummonersRift.webp"
-
+    heatmap = map_style == "Heatmap"
 
     match_ids = list(pd.DataFrame.from_records(match_records)["match_id"])
-    # print(match_ids)
+
     # == Get filtered data
     filtered_matchinfo = MATCHINFO_DF[MATCHINFO_DF.index.isin(match_ids)]
     
     kills = KILLS_DF[KILLS_DF["match_id"].isin(match_ids)]
-    kills = kills[
-        (kills["Time"] >= time_range[0]) &
-        (kills["Time"] <= time_range[1]) 
-    ]
-
     structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
-    structures = structures[
-        (structures["Time"] >= time_range[0]) &
-        (structures["Time"] <= time_range[1]) 
-    ]
-
     monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
-    monsters = monsters[
-        (monsters["Time"] >= time_range[0]) &
-        (monsters["Time"] <= time_range[1]) 
-    ]
 
 
 
@@ -149,6 +129,6 @@ def update_map(time_range, map_style,match_records, storedg):
             for _, row in filtered_matchinfo.drop_duplicates(subset="match_id").iterrows()
         ]
 
-    kills_map = get_map_timeline_mplot(kills, monsters, structures, MATCHINFO_DF)
+    kills_map = get_map_timeline_mplot(kills, monsters, structures, time_range, heatmap)
 
     return kills_map,  event_list
