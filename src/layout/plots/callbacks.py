@@ -37,7 +37,7 @@ def update_plots(match_records):
     # == Get filtered data
     filtered_matchinfo = MATCHINFO_DF[MATCHINFO_DF.index.isin(match_ids)]
     kills = KILLS_DF[KILLS_DF["match_id"].isin(match_ids)]
-    structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
+    #structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
     gold = GOLD_DF[GOLD_DF["match_id"].isin(match_ids)]
     monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
     if n_games == 1:

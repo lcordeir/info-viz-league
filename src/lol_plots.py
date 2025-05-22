@@ -376,11 +376,12 @@ def get_champ_rates(matchinfo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
     blue_wins = matchinfo.loc[matchinfo['bResult'] == 1, blue_cols].stack().value_counts()
     red_wins = matchinfo.loc[matchinfo['rResult'] == 1, red_cols].stack().value_counts()
     # Combine both
-    champion_wins = blue_wins.add(red_wins, fill_value=0).astype(int)
+    champion_wins = blue_wins.add(red_wins, fill_value=0).astype(int) # TODO: filter on top 5 pick rates or consider only champions with over n games
 
     ban_rates = matchinfo[ban_cols].stack().value_counts()/n_games*100
-    pick_rates = matchinfo[pick_cols].stack().value_counts()/n_games*100
-    win_rates = (champion_wins/pick_rates).sort_values(ascending=False)
+    champ_picks = matchinfo[pick_cols].stack().value_counts()
+    pick_rates = champ_picks/n_games*100
+    win_rates = champion_wins.divide(champ_picks,fill_value=0).sort_values(ascending=False)*100
 
     return pick_rates[:5], win_rates[:5], ban_rates[:5]
 
