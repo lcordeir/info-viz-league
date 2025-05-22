@@ -1,12 +1,9 @@
-from dash import Input, Output, State, callback, html
+from dash import Input, Output, callback, html
 import pandas as pd
-import plotly.graph_objects as go
 from os import path as pt
-import base64
-import os
-import json
-from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF, BANS_DF, GOLD_DF
-from lol_plots import get_map_timeline_mplot
+
+from layout.main_menu import MATCHINFO_DF, KILLS_DF, STRUCTURES_DF, MONSTERS_DF
+from map_plots import get_map_timeline_mplot
 
 @callback(
     [
