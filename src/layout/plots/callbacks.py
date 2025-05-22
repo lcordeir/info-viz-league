@@ -15,6 +15,7 @@ from lol_plots import *
         Output("first-drake-plot", "figure"),
         Output("top-kills-plot", "figure"),
         Output("top-deaths-plot", "figure"),
+        Output("gold-plot", "figure"),
 
          ],
     [
@@ -28,19 +29,16 @@ from lol_plots import *
 def update_plots(match_records):
     if match_records is None or len(match_records) == 0:
         print("no games selected")    
-        return (go.Figure(), ) * 5
+        return (go.Figure(), ) * 6
     
 
     match_ids = list(pd.DataFrame.from_records(match_records)["match_id"])
 
     # == Get filtered data
     filtered_matchinfo = MATCHINFO_DF[MATCHINFO_DF.index.isin(match_ids)]
-    
     kills = KILLS_DF[KILLS_DF["match_id"].isin(match_ids)]
-
     structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
-
-
+    gold = GOLD_DF[GOLD_DF["match_id"].isin(match_ids)]
     monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
 
     if len(match_records) == 1:
@@ -52,7 +50,8 @@ def update_plots(match_records):
         filtered_df = MATCHINFO_DF[mask]
         scores = get_team_scores(filtered_df, blue_team, red_team)
         wr_fig = get_2teams_winrate(blue_team, red_team, filtered_matchinfo, scores)
-    else: wr_fig = get_win_rate(filtered_matchinfo)
+    else: 
+        wr_fig = get_win_rate(filtered_matchinfo)
 
 
     return (wr_fig,
@@ -60,4 +59,5 @@ def update_plots(match_records):
             get_first_Drake_avg(monsters), 
             get_top_killers(kills),
             get_top_deaths(kills),
+            plot_gold_over_time(gold)
             )

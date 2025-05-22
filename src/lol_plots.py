@@ -265,3 +265,69 @@ def get_top_deaths(kills_df):
     top_deaths = kills_df["Victim"].value_counts().nlargest(3)
     return podium_figure(top_deaths, "Top 3 Deaths")
 
+
+# Gold
+def plot_gold_over_time(gold_df):
+    # Get the relevant rows
+    goldred = gold_df[gold_df["Type"] == "goldred"].iloc[0]
+    goldblue = gold_df[gold_df["Type"] == "goldblue"].iloc[0]
+    golddiff = gold_df[gold_df["Type"] == "golddiff"].iloc[0]
+
+    # Extract valid minute columns
+    minute_cols = [col for col in gold_df.columns if col.startswith("min_") and pd.notna(goldred[col])]
+    minutes = [int(col.split("_")[1]) for col in minute_cols]
+
+    goldred_values = goldred[minute_cols].astype(float).values
+    goldblue_values = goldblue[minute_cols].astype(float).values
+    golddiff_values = golddiff[minute_cols].astype(float).values
+
+    # Create hover text
+    red_hover = [f"Minute {m}<br>Red: {r:,.0f}<br>Diff: {d:+,.0f}" 
+                 for m, r, d in zip(minutes, goldred_values, golddiff_values)]
+    blue_hover = [f"Minute {m}<br>Blue: {b:,.0f}<br>Diff: {d:+,.0f}" 
+                  for m, b, d in zip(minutes, goldblue_values, golddiff_values)]
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(
+        x=minutes,
+        y=goldred_values,
+        name="Red Team Gold",
+        line=dict(color="red"),
+        hoverinfo="text",
+        text=red_hover
+    ))
+
+    fig.add_trace(go.Scatter(
+        x=minutes,
+        y=goldblue_values,
+        name="Blue Team Gold",
+        line=dict(color="blue"),
+        hoverinfo="text",
+        text=blue_hover
+    ))
+
+    fig.update_layout(
+        title="Gold Over Time per Team",
+        xaxis=dict(title="Minute", range=[0, max(minutes)]),
+        yaxis_title="Gold",
+        plot_bgcolor="white",
+        hovermode="closest"  # default hover behavior
+    )
+
+    fig.update_layout(
+    xaxis=dict(
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=1,
+        griddash='dot'
+    ),
+    yaxis=dict(
+        showgrid=True,
+        gridcolor='lightgray',
+        gridwidth=1,
+        griddash='dot'
+    )
+)
+
+    return fig
