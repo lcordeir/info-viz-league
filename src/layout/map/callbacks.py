@@ -22,7 +22,7 @@ from map_plots import get_map_timeline_mplot
 )
 def update_map(time_range, map_style,match_records, storedg):
 
-    if match_records == None:
+    if match_records == None or len(match_records) == 0 :
         return go.Figure(), html.Div()
 
     heatmap = map_style == "Heatmap"

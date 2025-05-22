@@ -126,6 +126,9 @@ structures.loc[nexus_mask, 'Lane'] = np.where(
     'LOWER'
 )
 
+# Champ IDs
+## All capitalize
+champ_ids['NAME'] = champ_ids['NAME'].str.capitalize()
 
 # Save csvs
 print("Saving modified csvs")
@@ -135,3 +138,4 @@ kills.to_csv(pt.join("data","kills_mod.csv"))
 matchinfo.to_csv(pt.join("data","matchinfo_mod.csv"))
 monsters.to_csv(pt.join("data","monsters_mod.csv"))
 structures.to_csv(pt.join("data","structures_mod.csv"))
+champ_ids.to_csv(pt.join("data","champ_ids.csv"),index=False)

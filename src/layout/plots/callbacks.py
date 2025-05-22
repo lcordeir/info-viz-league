@@ -40,7 +40,6 @@ def update_plots(match_records):
     structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
     gold = GOLD_DF[GOLD_DF["match_id"].isin(match_ids)]
     monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
-
     if n_games == 1:
         # Win rates single game
         blue_team = filtered_matchinfo["blueTeamTag"].values[0]
@@ -60,7 +59,6 @@ def update_plots(match_records):
         wr_fig = get_win_rate(filtered_matchinfo)
         pick_rate, win_rate, ban_rate = get_champ_rates(filtered_matchinfo)
         champ_plot = get_champ_rates_plots(pick_rate, win_rate, ban_rate, CHAMP_IDS_DF)
-
     # Top 3 plots (two plots in one)
     top_killers = get_top_killers(kills)
     top_deaths = get_top_deaths(kills)

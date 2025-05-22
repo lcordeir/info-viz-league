@@ -386,7 +386,7 @@ def get_champ_rates(matchinfo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
 
 def get_image_paths(champ_names: List[str], champ_ids: pd.DataFrame) -> List[str]:
     """Return a list of champion icon URLs based on champion names."""
-    sel_champ_ids = [champ_ids.loc[champ_ids['NAME'] == name, 'ID'].values[0] for name in champ_names]
+    sel_champ_ids = [str(champ_ids.loc[champ_ids['NAME'] == name.capitalize(), 'ID'].values[0]) for name in champ_names]
     return [f"{CHAMP_ICONS_LINK}{id}.png" for id in sel_champ_ids]
 
 def get_champ_rates_plots(pick_df: pd.DataFrame, win_df: pd.DataFrame, ban_df: pd.DataFrame, champ_ids: pd.DataFrame) -> go.Figure:
