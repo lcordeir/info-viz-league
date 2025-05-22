@@ -28,7 +28,7 @@ from lol_plots import *
 def update_plots(match_records):
     if match_records is None or len(match_records) == 0:
         print("no games selected")    
-        return (go.Figure(), ) * 5
+        return (go.Figure(), ) * 6
     
     n_games = len(match_records)
 
