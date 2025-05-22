@@ -181,89 +181,117 @@ def get_2teams_winrate(blue_team: str, red_team: str, row: pd.DataFrame, scores:
 
 
 # Top 3 plots
-def podium_figure(series, title):
-    n = len(series)
-    if n == 0:
-        fig = go.Figure()
+def podium_dual_figure(series1, title1, series2, title2):
+    # Helper to prepare data for podium bars (top 3)
+    def prepare_podium_data(series):
+        n = len(series)
+        if n == 0:
+            return []
+        positions = [1, 0, 2]  # Podium order: #2, #1, #3
+        labels = ["#2", "#1", "#3"]
+        colors = ["silver", "gold", "#cd7f32"]
+        heights = [13, 20, 8]
+        data = []
+        for pos, label, color, height in zip(positions, labels, colors, heights):
+            if pos < n:
+                data.append({
+                    "label": label,
+                    "name": series.index[pos],
+                    "color": color,
+                    "height": height
+                })
+        return data
+
+    data1 = prepare_podium_data(series1)
+    data2 = prepare_podium_data(series2)
+
+    # If no data in both, show one subplot with annotation
+    if not data1 and not data2:
+        fig = make_subplots(rows=1, cols=1)
+        fig.add_annotation(
+            text="Not enough data",
+            x=0.5, y=0.5,
+            xref="paper", yref="paper",
+            showarrow=False,
+            font=dict(size=24)
+        )
         fig.update_layout(
-            title=title,
-            xaxis=dict(showticklabels=False),
-            yaxis=dict(showticklabels=False),
-            showlegend=False,
             plot_bgcolor="white",
-            hovermode=False,
             dragmode=False,
-            annotations=[
-                dict(
-                    text="Not enough data",
-                    x=0.5, y=0.5,
-                    xref="paper", yref="paper",
-                    showarrow=False,
-                    font=dict(size=24)
-                )
-            ]
+            hovermode=False,
+            xaxis=dict(showticklabels=False),
+            yaxis=dict(showticklabels=False)
         )
         return fig
 
-    # Podium positions: left = #2, center = #1, right = #3
-    positions = [1, 0, 2]  # Indexes in value_counts()
-    labels = ["#2", "#1", "#3"]
-    colors = ["silver", "gold", "#cd7f32"]
-    heights = [13, 20, 8]
+    fig = make_subplots(rows=1, cols=2, subplot_titles=[title1, title2])
 
-    data = []
-    for pos, label, color, height in zip(positions, labels, colors, heights):
-        if pos < n:
-            data.append({
-                "label": label,
-                "name": series.index[pos],
-                "color": color,
-                "height": height
-            })
+    # Add bars for series1 (left subplot)
+    if data1:
+        fig.add_trace(go.Bar(
+            x=[d["label"] for d in data1],
+            y=[d["height"] for d in data1],
+            text=[d["name"] for d in data1],
+            textfont=dict(size=20),
+            textposition="inside",
+            marker_color=[d["color"] for d in data1],
+            width=[1]*len(data1),
+            hoverinfo='skip'
+        ), row=1, col=1)
+    else:
+        fig.add_annotation(
+            text="Not enough data",
+            x=0.5, y=0.5,
+            xref="x domain", yref="y domain",
+            showarrow=False,
+            font=dict(size=20),
+            row=1, col=1
+        )
 
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=[d["label"] for d in data],
-        y=[d["height"] for d in data],
-        text=[d["name"] for d in data],
-        textfont=dict(size=20),
-        textposition="inside",
-        marker_color=[d["color"] for d in data],
-        width=[1] * len(data)
-    ))
+    # Add bars for series2 (right subplot)
+    if data2:
+        fig.add_trace(go.Bar(
+            x=[d["label"] for d in data2],
+            y=[d["height"] for d in data2],
+            text=[d["name"] for d in data2],
+            textfont=dict(size=20),
+            textposition="inside",
+            marker_color=[d["color"] for d in data2],
+            width=[1]*len(data2),
+            hoverinfo='skip'
+        ), row=1, col=2)
+    else:
+        fig.add_annotation(
+            text="Not enough data",
+            x=0.5, y=0.5,
+            xref="x domain", yref="y domain",
+            showarrow=False,
+            font=dict(size=20),
+            row=1, col=2
+        )
 
     fig.update_layout(
-        title=title,
-        xaxis=dict(
-            showticklabels=True,
-            tickfont=dict(size=32)
-        ),
-        yaxis=dict(showticklabels=False),
         showlegend=False,
         bargap=0.5,
         plot_bgcolor="white",
+        dragmode=False,
         hovermode=False,
-        dragmode=False
+        xaxis=dict(tickfont=dict(size=32), showticklabels=True),
+        xaxis2=dict(tickfont=dict(size=32), showticklabels=True),
+        yaxis=dict(showticklabels=False),
+        yaxis2=dict(showticklabels=False)
     )
-    fig.update_traces(hoverinfo="skip")
 
     return fig
 
 
 def get_top_killers(kills_df):
     top_kills = kills_df["Killer"].value_counts().nlargest(3)
-    return podium_figure(top_kills, "Top 3 Killers")
-
-
-def get_top_assisters(kills_df):
-    assist_cols = [col for col in kills_df.columns if col.startswith("Assist_")]
-    top_assists = kills_df[assist_cols].stack().value_counts().nlargest(3)
-    return podium_figure(top_assists, "Top 3 Assisters")
-
+    return top_kills
 
 def get_top_deaths(kills_df):
     top_deaths = kills_df["Victim"].value_counts().nlargest(3)
-    return podium_figure(top_deaths, "Top 3 Deaths")
+    return top_deaths
 
 
 # Gold

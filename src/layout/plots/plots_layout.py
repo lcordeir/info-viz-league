@@ -43,7 +43,7 @@ def plots_layout() -> list:
             html.Div(dcc.Graph(id="objective-plot", style={"width": "100%", "height": "100%"},config={}), style={"flex": "1", "minWidth": "45%"}),
             html.Div(dcc.Graph(id="first-drake-plot", style={"width": "100%", "height": "100%"},config={'staticPlot': True }), style={"flex": "1", "minWidth": "45%"}),
             html.Div(dcc.Graph(id="top-kills-plot", style={"width": "100%", "height": "100%"},config={'displayModeBar': False, 'staticPlot': True }), style={"flex": "1", "minWidth": "45%"}), 
-            html.Div(dcc.Graph(id="top-deaths-plot", style={"width": "100%", "height": "100%"},config={'displayModeBar': False}), style={"flex": "1", "minWidth": "45%"}), 
+            # html.Div(dcc.Graph(id="top-deaths-plot", style={"width": "100%", "height": "100%"},config={'displayModeBar': False}), style={"flex": "1", "minWidth": "45%"}), 
             html.Div(dcc.Graph(id="gold-plot", style={"width": "100%", "height": "100%"},config={'displayModeBar': False, 'staticPlot': False }), style={"flex": "1", "minWidth": "45%"}), 
             html.Div(dcc.Graph(id="map-timeline-mplot", style={"width": "100%", "height": "100%"},config={'displayModeBar': False, 'staticPlot': True }), style={"flex": "1", "minWidth": "45%"}), ###
         ], style={
