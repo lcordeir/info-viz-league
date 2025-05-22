@@ -10,17 +10,9 @@ from lol_plots import *
 
 @callback(
     [
-        # Output("map-graph", "figure"),
-        # Output("timeline-fig", "figure"),
-        # Output("event-list", "children"),
-        Output("kill-plot", "figure"),
-        Output("heatmap-plot", "figure"),
+        Output("winrate-plot", "figure"),
         Output("objective-plot", "figure"),
         Output("first-drake-plot", "figure"),
-        Output("timeline-monsters-plot", "figure"),
-        Output("timeline-structures-plot", "figure"),
-        Output("timeline-kills-plot", "figure"),
-        Output("map-timeline-mplot", "figure"),
          ],
     [
         # Input("filtered_match_info", "data"),
@@ -35,45 +27,32 @@ def update_plots(match_records):
         print("no games selected")    
         return (go.Figure(), ) * 8
     
-    # print("games selected:")    
-    # print(match_records)
+
     match_ids = list(pd.DataFrame.from_records(match_records)["match_id"])
-    # print(match_ids)
+
     # == Get filtered data
     filtered_matchinfo = MATCHINFO_DF[MATCHINFO_DF.index.isin(match_ids)]
     
     kills = KILLS_DF[KILLS_DF["match_id"].isin(match_ids)]
-    # kills = kills[
-    #     (kills["Time"] >= time_range[0]) &
-    #     (kills["Time"] <= time_range[1]) &
-    #     (kills["Team"].isin(team_filter))
-    # ]
 
     structures = STRUCTURES_DF[STRUCTURES_DF["match_id"].isin(match_ids)]
-    # structures = structures[
-    #     (structures["Time"] >= time_range[0]) &
-    #     (structures["Time"] <= time_range[1]) &
-    #     (structures["Team"].isin(team_filter))
-    # ]
+
 
     monsters = MONSTERS_DF[MONSTERS_DF["match_id"].isin(match_ids)]
-    # monsters = monsters[
-    #     (monsters["Time"] >= time_range[0]) &
-    #     (monsters["Time"] <= time_range[1]) &
-    #     (monsters["Team"].isin(team_filter))
-    # ]
 
-    return (get_kill_plot(kills),
-            get_kill_heatmap(kills, heatmap_binsize=100), 
+    if len(match_records) == 1:
+        blue_team = filtered_matchinfo["blueTeamTag"].values[0]
+        red_team = filtered_matchinfo["redTeamTag"].values[0]
+
+        cols = MATCHINFO_DF[['blueTeamTag', 'redTeamTag']].to_numpy()
+        mask = ( (cols == blue_team).any(axis=1) ) & ( (cols == red_team).any(axis=1) )
+        filtered_df = MATCHINFO_DF[mask]
+        scores = get_team_scores(filtered_df, blue_team, red_team)
+        wr_fig = get_2teams_winrate(blue_team, red_team, filtered_matchinfo, scores)
+    else: wr_fig = get_win_rate(filtered_matchinfo)
+
+
+    return (wr_fig,
             get_objective_distribution(monsters), 
             get_first_Drake_avg(monsters), 
-            get_monsters_timeline(monsters, x_size=100),
-            get_structures_timeline(structures, x_size=100),
-            get_kills_timeline(kills),
-            get_map_timeline_mplot(kills, monsters, structures, filtered_matchinfo)
-            
             )
-    # if len(match_ids) == 1:
-    #     return (get_kill_plot_single(kills), )
-    # else:
-    #     return (get_kill_plot_aggregate(kills), )
