@@ -112,7 +112,6 @@ def get_team_scores(matchinfo: pd.DataFrame, blue_team: str, red_team: str) -> d
     """Computes total scores of blue and red team in df. df should be matchinfo"""
     teams = [blue_team, red_team]
     scores = {}
-    print(matchinfo)
     for team in teams:
         blue_score = matchinfo.loc[matchinfo['blueTeamTag'] == team, 'bResult'].sum()
         red_score = matchinfo.loc[matchinfo['redTeamTag'] == team, 'rResult'].sum()
