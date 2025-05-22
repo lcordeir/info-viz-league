@@ -444,17 +444,18 @@ def create_champ_rate_trace(df: pd.DataFrame, colour: str, ban: bool = False) ->
     
     return trace
 
-def add_champion_images(fig: go.Figure, champ_names: List[str], img_paths: List[str], xref: str, y_shift=-0.05, size=0.1):
-    """Adds images under x-axis in a specific subplot column."""
-
-    for champ, path in zip(champ_names, img_paths):
+def add_champion_images(fig: go.Figure, champ_refs: List[str|float], img_paths: List[str], xref: str, y_shift: float|List[float]=-0.05, size: float=0.1):
+    """Adds images under x-axis in a specific subplot column. champ_ref is a list either of champion names (to reference xref associated to champion) or a float value referring to an exact position"""
+    if type(y_shift) is not list:
+        y_shift = [y_shift for i in range(len(champ_refs))]
+    for champ, path, y in zip(champ_refs, img_paths, y_shift):
         fig.add_layout_image(
             dict(
                 source=path,
                 xref=xref,
                 yref="paper",
                 x=champ,
-                y=y_shift,
+                y=y,
                 sizex=1,
                 sizey=size,
                 xanchor="center",

@@ -53,7 +53,9 @@ def update_plots(match_records):
         wr_fig = get_2teams_winrate(blue_team, red_team, filtered_matchinfo, scores)
 
         # Champ rates single game
-        champ_plot = get_champs_posbans(filtered_matchinfo, CHAMP_IDS_DF)
+        pick_rate, win_rate, ban_rate = get_champ_rates(filtered_matchinfo)
+        champ_plot = get_champ_rates_plots(pick_rate, win_rate, ban_rate, CHAMP_IDS_DF)
+        #champ_plot = get_champs_posbans(filtered_matchinfo, CHAMP_IDS_DF)
     else: 
         wr_fig = get_win_rate(filtered_matchinfo)
         pick_rate, win_rate, ban_rate = get_champ_rates(filtered_matchinfo)
