@@ -11,9 +11,10 @@ from plotly.subplots import make_subplots
 from typing import Optional, List
 import os, math
 
-from utils import format_time, encode_image_to_base64
+from utils import format_time, encode_image_to_base64, generate_shades_plotly
 
 MAPICONS_PATH = os.path.join("ressources","mapicons")
+CHAMP_ICONS_LINK = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/champion-icons/" # Append champion id
 
 # === General Plots ==
 
@@ -359,3 +360,107 @@ def plot_gold_over_time(gold_df):
 )
 
     return fig
+
+# === Champion Pick/Ban/Win rates ===
+
+def get_champ_rates(matchinfo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """Computes the champion winrates"""
+    ban_cols = ["blueBan1","blueBan2","blueBan3","blueBan4","blueBan5","redBan1","redBan2","redBan3","redBan4","redBan5"]
+    pick_cols = ["blueTopChamp","blueJungleChamp","blueMiddleChamp","blueADCChamp","blueSupportChamp","redTopChamp","redJungleChamp","redMiddleChamp","redADCChamp","redSupportChamp"]
+    n_games = matchinfo.shape[0]
+    # List all pick columns
+    blue_cols = pick_cols[:5]
+    red_cols = pick_cols[5:]
+
+    # Count wins per side
+    blue_wins = matchinfo.loc[matchinfo['bResult'] == 1, blue_cols].stack().value_counts()
+    red_wins = matchinfo.loc[matchinfo['rResult'] == 1, red_cols].stack().value_counts()
+    # Combine both
+    champion_wins = blue_wins.add(red_wins, fill_value=0).astype(int)
+
+    ban_rates = matchinfo[ban_cols].stack().value_counts()/n_games*100
+    pick_rates = matchinfo[pick_cols].stack().value_counts()/n_games*100
+    win_rates = (champion_wins/pick_rates).sort_values(ascending=False)
+
+    return pick_rates[:5], win_rates[:5], ban_rates[:5]
+
+def get_image_paths(champ_names: List[str], champ_ids: pd.DataFrame) -> List[str]:
+    """Return a list of champion icon URLs based on champion names."""
+    sel_champ_ids = champ_ids.loc[champ_ids['NAME'].isin(champ_names), 'ID'].tolist()
+    return [f"{CHAMP_ICONS_LINK}{id}.png" for id in sel_champ_ids]
+
+def get_champ_rates_plots(pick_df: pd.DataFrame, win_df: pd.DataFrame, ban_df: pd.DataFrame, champ_ids: pd.DataFrame) -> go.Figure:
+    """Creates subplots with champion pick ban and winrates"""
+
+    fig = make_subplots(
+        rows=1, cols=3,
+        shared_xaxes=False,
+        column_widths=[00.33,0.33,0.34],
+        vertical_spacing=0.1,
+        subplot_titles=("Pick Rates", "Win rates", "Ban rates"),
+        specs=[[{}, {}, {}]]
+    )
+
+    # Create single bar traces
+    pick_trace = create_champ_rate_trace(pick_df, colour="#004ac0")
+    win_trace = create_champ_rate_trace(win_df, colour="#009e00")
+    ban_trace = create_champ_rate_trace(ban_df, colour="#ff0000", ban=True)
+
+    # Add traces to subplots
+    fig.add_trace(pick_trace, row=1, col=1)
+    fig.add_trace(win_trace, row=1, col=2)
+    fig.add_trace(ban_trace, row=1, col=3)
+
+
+    # Add images for each subplot
+    add_champion_images(fig, pick_df.index, get_image_paths(pick_df.index,champ_ids), subplot_col=1)
+    add_champion_images(fig, win_df.index, get_image_paths(win_df.index,champ_ids), subplot_col=2)
+    add_champion_images(fig, ban_df.index, get_image_paths(ban_df.index,champ_ids), subplot_col=3)
+
+    # Update layout
+    fig.update_traces(width=0.85)
+    fig.update_layout(
+        showlegend=False,
+        margin=dict(b=100),  # Make space for champ icons
+    )
+    fig.update_xaxes(showticklabels=False)
+    return fig
+
+
+def create_champ_rate_trace(df: pd.DataFrame, colour: str, ban: bool = False) -> go.Figure:
+    """Creates a bar trace of champion pick/ban or winrates, should receive a df with the champion name as an index and their rate as sole values"""
+    colours = generate_shades_plotly(colour, n_shades=df.shape[0])
+
+    trace = go.Bar(
+        x=df.index,
+        y=df.values,
+        marker_color=colours,
+        width=0.75,
+        hovertemplate="%{y:.2f}%",
+        showlegend=False
+    )
+    
+    return trace
+
+def add_champion_images(fig: go.Figure, champ_names: List[str], img_paths: List[str], subplot_col: int, y_shift=-0.12, size=0.1):
+    """Adds images under x-axis in a specific subplot column."""
+    xref = f"x{subplot_col}"
+
+    for champ, path in zip(champ_names, img_paths):
+        fig.add_layout_image(
+            dict(
+                source=path,
+                xref=xref,
+                yref="paper",
+                x=champ,
+                y=y_shift,
+                sizex=1,
+                sizey=size,
+                xanchor="center",
+                yanchor="top",
+                layer="above"
+            )
+        )
+
+def get_champs_posbans():
+    return None

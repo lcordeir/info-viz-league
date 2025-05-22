@@ -14,6 +14,7 @@ kills = pd.read_csv(pt.join("data","kills.csv"))
 matchinfo = pd.read_csv(pt.join("data","matchinfo.csv"))
 monsters = pd.read_csv(pt.join("data","monsters.csv"))
 structures = pd.read_csv(pt.join("data","structures.csv"))
+champ_ids = pd.read_csv(pt.join("data","champ_ids.csv"))
 
 # All
 ## IDs
