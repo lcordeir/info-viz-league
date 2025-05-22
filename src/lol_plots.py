@@ -386,7 +386,7 @@ def get_champ_rates(matchinfo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame
 
 def get_image_paths(champ_names: List[str], champ_ids: pd.DataFrame) -> List[str]:
     """Return a list of champion icon URLs based on champion names."""
-    sel_champ_ids = champ_ids.loc[champ_ids['NAME'].isin(champ_names), 'ID'].tolist()
+    sel_champ_ids = [champ_ids.loc[champ_ids['NAME'] == name, 'ID'].values[0] for name in champ_names]
     return [f"{CHAMP_ICONS_LINK}{id}.png" for id in sel_champ_ids]
 
 def get_champ_rates_plots(pick_df: pd.DataFrame, win_df: pd.DataFrame, ban_df: pd.DataFrame, champ_ids: pd.DataFrame) -> go.Figure:
@@ -413,9 +413,11 @@ def get_champ_rates_plots(pick_df: pd.DataFrame, win_df: pd.DataFrame, ban_df: p
 
 
     # Add images for each subplot
-    add_champion_images(fig, pick_df.index, get_image_paths(pick_df.index,champ_ids), subplot_col=1)
-    add_champion_images(fig, win_df.index, get_image_paths(win_df.index,champ_ids), subplot_col=2)
-    add_champion_images(fig, ban_df.index, get_image_paths(ban_df.index,champ_ids), subplot_col=3)
+    pick_names = pick_df.index.tolist()
+    pick_img_paths = get_image_paths(pick_names, champ_ids)
+    add_champion_images(fig, pick_df.index, pick_img_paths, "x1") # xref according to right subplot
+    add_champion_images(fig, win_df.index, get_image_paths(win_df.index,champ_ids), "x2")
+    add_champion_images(fig, ban_df.index, get_image_paths(ban_df.index,champ_ids), "x3")
 
     # Update layout
     fig.update_traces(width=0.85)
@@ -436,15 +438,14 @@ def create_champ_rate_trace(df: pd.DataFrame, colour: str, ban: bool = False) ->
         y=df.values,
         marker_color=colours,
         width=0.75,
-        hovertemplate="%{y:.2f}%",
+        hovertemplate="%{x}: %{y:.2f}%",
         showlegend=False
     )
     
     return trace
 
-def add_champion_images(fig: go.Figure, champ_names: List[str], img_paths: List[str], subplot_col: int, y_shift=-0.12, size=0.1):
+def add_champion_images(fig: go.Figure, champ_names: List[str], img_paths: List[str], xref: str, y_shift=-0.05, size=0.1):
     """Adds images under x-axis in a specific subplot column."""
-    xref = f"x{subplot_col}"
 
     for champ, path in zip(champ_names, img_paths):
         fig.add_layout_image(
