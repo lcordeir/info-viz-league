@@ -1,8 +1,8 @@
 import pandas as pd
-from typing import List, Dict, Any
 from os import path as pt
-from dash import Dash, html, dcc, dash_table, Input, Output, State, callback, no_update
-import plotly.express as px
+from dash import Input, Output, State, callback, no_update
+
+from utils import resource_path
 
 @callback(
     Output('filters_metadata_reset', 'n_clicks'),
@@ -46,7 +46,7 @@ def get_metadata_df():
     """
     Returns the match_info dataframe
     """
-    df = pd.read_csv(pt.join("data","matchinfo_mod.csv"))
+    df = pd.read_csv(resource_path(pt.join('data', 'matchinfo_mod.csv')))
     return df.to_dict("records")
 
 
