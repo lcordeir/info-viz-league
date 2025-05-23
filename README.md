@@ -28,7 +28,7 @@ This method is only recommended if you know what you're doing and planning on us
 ### Getting started
 To install all the dependencies simply run `uv sync` in the repository directory. This will create a .venv file in your repository root, can activate it by using:
 - Windows: `.\.venv\Scripts\activate` 
-- Linux/MacOS: `source venv/bin/activate`
+- Linux/MacOS: `source .venv/bin/activate`
 
 Once the the environment is ready you need to get the dataset. The application was built with the aforementioned dataset from kaggle in mind. Make sure you download it and put the csv files in a `data` folder in the repository root.
 

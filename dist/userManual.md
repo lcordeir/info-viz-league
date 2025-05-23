@@ -10,7 +10,7 @@ Try the application in relation to your user case. The user cases for our applic
 - Competitive/Semi-pro player
 - Coach/Analyst/Manager
 
-Consider the application as a tool to give you additional insights on the games presented. COnsider the tool aspect of it and not the data itself as it only serves as an example. After trying it out we ask you to fill out a google forms to evaluate the tool. Please fill the evaluation out with a **critical and honest mindset** that would allow us to have a relevant evaluation. You can find the form [here](https://docs.google.com/forms/d/e/1FAIpQLSfIrSlJi3F6rYJmHPT0nV5Pi0tKlDmRJdY3k1cLOK03QOkvpg/viewform?usp=header).
+Consider the application as a tool to give you additional insights on the games presented. Consider the tool aspect of it and not the data itself as it only serves as an example. After trying it out we ask you to fill out a google forms to evaluate the tool. Please fill the evaluation out with a **critical and honest mindset** that would allow us to have a relevant evaluation. You can find the form [here](https://docs.google.com/forms/d/e/1FAIpQLSfIrSlJi3F6rYJmHPT0nV5Pi0tKlDmRJdY3k1cLOK03QOkvpg/viewform?usp=header).
 
 Note that we can only consider evaluations given before Sunday noon!
 ## Considerations
@@ -29,7 +29,7 @@ A test will then appear confirming the app is launched and indicating an address
 
 ![alt text](./manual_images/image.png)
 
-You should copy paste that link (http://127.0.0.1:8050/) in your browser of choice, we reccommend Google Chrome.
+You should copy paste that link (http://127.0.0.1:8050/) in your browser of choice, we recommend Google Chrome.
 ## Base interface
 ### Filtering
 You will first be faced with this page of empty plots and filtering options.
