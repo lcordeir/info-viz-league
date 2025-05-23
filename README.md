@@ -32,10 +32,10 @@ To install all the dependencies simply run `uv sync` in the repository directory
 
 Once the the environment is ready you need to get the dataset. The application was built with the aforementioned dataset from kaggle in mind. Make sure you download it and put the csv files in a `data` folder in the repository root.
 
-Before running the app you should run our data preprocessing script. To do so so run `src/data_prep.py` from the repository root. 
+Before running the app you should run our data preprocessing script. To do so so run `python src/data_prep.py` from the repository root. 
 > If you're having issues activating the venv. You can also explicitly run python through uv, simply use `uv run python src/data_prep.py` from the root.
 
-Once the preprocessing is done you can run `src/app.py`.
+Once the preprocessing is done you can run `python src/app.py`.
 #### Datasets
 `data_prep` offers two preprocessing options, you can chose which to use, by changing the global variable `REDUCE` in the Python file.
 - `REDUCE = False`: Is the default, it will do the simple data preprocessing. This will create new versions of the csv files appended by a `_mod` in the name, used by our application. 
