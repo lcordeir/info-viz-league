@@ -17,7 +17,7 @@ The rest of the changes are formalities relating to the creation of the packaged
 # Running the applications
 There are 2 ways of running the application. One using a prebuilt and packaged executable, one running it using a Python installation.
 ## Executable
-There is an executable in the `dist` folder along with an user manual (given to the evaluation participants). running the exe will run the application with the reduced dataset (see "Datasets" hereunder)
+There is an executable in the release and an user manual in the `dist` folder (given to the evaluation participants). running the exe will run the application with the reduced dataset (see "Datasets" hereunder)
 ## Developers
 This method is only recommended if you know what you're doing and planning on using an extended or own dataset.
 ### Requirements

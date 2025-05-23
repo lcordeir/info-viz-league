@@ -3,3 +3,4 @@ tests/
 build/
 dist/lol_viz2025/_internal
 **/__pycache__/*
+*.exe
